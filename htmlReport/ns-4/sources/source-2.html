@@ -1,0 +1,246 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > TaskMapperImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.taskmanagementapp.dto.mappers</a>
+</div>
+
+<h1>Coverage Summary for Class: TaskMapperImpl (com.example.taskmanagementapp.dto.mappers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TaskMapperImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80.3%
+  </span>
+  <span class="absValue">
+    (57/71)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.taskmanagementapp.dto.mappers;
+&nbsp;
+&nbsp;import com.example.taskmanagementapp.dto.TaskDTO;
+&nbsp;import com.example.taskmanagementapp.dto.UserDTO;
+&nbsp;import com.example.taskmanagementapp.dto.WorkspaceDTO;
+&nbsp;import com.example.taskmanagementapp.model.Task;
+&nbsp;import com.example.taskmanagementapp.model.User;
+&nbsp;import com.example.taskmanagementapp.model.Workspace;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import javax.annotation.processing.Generated;
+&nbsp;
+&nbsp;@Generated(
+&nbsp;    value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
+&nbsp;    date = &quot;2024-01-24T23:01:45+0200&quot;,
+&nbsp;    comments = &quot;version: 1.5.5.Final, compiler: IncrementalProcessingEnvironment from gradle-language-java-8.5.jar, environment: Java 17.0.3.1 (Oracle Corporation)&quot;
+&nbsp;)
+<b class="fc">&nbsp;public class TaskMapperImpl implements TaskMapper {</b>
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public TaskDTO taskToTaskDTO(Task task) {
+<b class="fc">&nbsp;        if ( task == null ) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        TaskDTO taskDTO = new TaskDTO();</b>
+&nbsp;
+<b class="fc">&nbsp;        taskDTO.setId( task.getId() );</b>
+<b class="fc">&nbsp;        taskDTO.setTitle( task.getTitle() );</b>
+<b class="fc">&nbsp;        taskDTO.setContent( task.getContent() );</b>
+<b class="fc">&nbsp;        taskDTO.setCreationDate( task.getCreationDate() );</b>
+<b class="fc">&nbsp;        taskDTO.setLastModifiedDate( task.getLastModifiedDate() );</b>
+<b class="fc">&nbsp;        taskDTO.setDeadlineDate( task.getDeadlineDate() );</b>
+<b class="fc">&nbsp;        taskDTO.setPerformers( userListToUserDTOList( task.getPerformers() ) );</b>
+<b class="fc">&nbsp;        taskDTO.setCreator( userToUserDTO( task.getCreator() ) );</b>
+<b class="fc">&nbsp;        taskDTO.setWorkspace( workspaceToWorkspaceDTO( task.getWorkspace() ) );</b>
+&nbsp;
+<b class="fc">&nbsp;        return taskDTO;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;TaskDTO&gt; tasksToTaskDTOs(List&lt;Task&gt; tasks) {
+<b class="fc">&nbsp;        if ( tasks == null ) {</b>
+<b class="nc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;TaskDTO&gt; list = new ArrayList&lt;TaskDTO&gt;( tasks.size() );</b>
+<b class="fc">&nbsp;        for ( Task task : tasks ) {</b>
+<b class="fc">&nbsp;            list.add( taskToTaskDTO( task ) );</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        return list;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void updateTask(Task updateTask, Task task) {
+<b class="fc">&nbsp;        if ( updateTask == null ) {</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if ( updateTask.getTitle() != null ) {</b>
+<b class="fc">&nbsp;            task.setTitle( updateTask.getTitle() );</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if ( updateTask.getContent() != null ) {</b>
+<b class="fc">&nbsp;            task.setContent( updateTask.getContent() );</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if ( updateTask.getStatus() != null ) {</b>
+<b class="nc">&nbsp;            task.setStatus( updateTask.getStatus() );</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if ( updateTask.getCreationDate() != null ) {</b>
+<b class="nc">&nbsp;            task.setCreationDate( updateTask.getCreationDate() );</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if ( updateTask.getLastModifiedDate() != null ) {</b>
+<b class="nc">&nbsp;            task.setLastModifiedDate( updateTask.getLastModifiedDate() );</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if ( updateTask.getDeadlineDate() != null ) {</b>
+<b class="nc">&nbsp;            task.setDeadlineDate( updateTask.getDeadlineDate() );</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if ( task.getPerformers() != null ) {</b>
+<b class="nc">&nbsp;            List&lt;User&gt; list = updateTask.getPerformers();</b>
+<b class="nc">&nbsp;            if ( list != null ) {</b>
+<b class="nc">&nbsp;                task.getPerformers().clear();</b>
+<b class="nc">&nbsp;                task.getPerformers().addAll( list );</b>
+&nbsp;            }
+<b class="nc">&nbsp;        }</b>
+&nbsp;        else {
+<b class="fc">&nbsp;            List&lt;User&gt; list = updateTask.getPerformers();</b>
+<b class="fc">&nbsp;            if ( list != null ) {</b>
+<b class="nc">&nbsp;                task.setPerformers( new ArrayList&lt;User&gt;( list ) );</b>
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;        if ( updateTask.getCreator() != null ) {</b>
+<b class="nc">&nbsp;            task.setCreator( updateTask.getCreator() );</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if ( updateTask.getWorkspace() != null ) {</b>
+<b class="nc">&nbsp;            task.setWorkspace( updateTask.getWorkspace() );</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    protected UserDTO userToUserDTO(User user) {
+<b class="fc">&nbsp;        if ( user == null ) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        UserDTO userDTO = new UserDTO();</b>
+&nbsp;
+<b class="fc">&nbsp;        userDTO.setId( user.getId() );</b>
+<b class="fc">&nbsp;        userDTO.setFirstName( user.getFirstName() );</b>
+<b class="fc">&nbsp;        userDTO.setLastName( user.getLastName() );</b>
+<b class="fc">&nbsp;        userDTO.setEmail( user.getEmail() );</b>
+<b class="fc">&nbsp;        userDTO.setCreationDate( user.getCreationDate() );</b>
+&nbsp;
+<b class="fc">&nbsp;        return userDTO;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected List&lt;UserDTO&gt; userListToUserDTOList(List&lt;User&gt; list) {
+<b class="fc">&nbsp;        if ( list == null ) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;UserDTO&gt; list1 = new ArrayList&lt;UserDTO&gt;( list.size() );</b>
+<b class="fc">&nbsp;        for ( User user : list ) {</b>
+<b class="fc">&nbsp;            list1.add( userToUserDTO( user ) );</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        return list1;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    protected WorkspaceDTO workspaceToWorkspaceDTO(Workspace workspace) {
+<b class="fc">&nbsp;        if ( workspace == null ) {</b>
+<b class="fc">&nbsp;            return null;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        WorkspaceDTO workspaceDTO = new WorkspaceDTO();</b>
+&nbsp;
+<b class="fc">&nbsp;        workspaceDTO.setId( workspace.getId() );</b>
+<b class="fc">&nbsp;        workspaceDTO.setName( workspace.getName() );</b>
+<b class="fc">&nbsp;        workspaceDTO.setMembers( userListToUserDTOList( workspace.getMembers() ) );</b>
+<b class="fc">&nbsp;        workspaceDTO.setCreator( userToUserDTO( workspace.getCreator() ) );</b>
+&nbsp;
+<b class="fc">&nbsp;        return workspaceDTO;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-01-25 00:43</div>
+</div>
+</body>
+</html>
