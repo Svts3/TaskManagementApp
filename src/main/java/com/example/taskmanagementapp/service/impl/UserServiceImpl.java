@@ -6,6 +6,7 @@ import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.repository.UserRepository;
 import com.example.taskmanagementapp.service.UserService;
 import jakarta.transaction.Transactional;
+import org.springframework.lang.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User save(User entity) {
+    public User save(@NonNull User entity) {
         entity.setCreationDate(new Date());
         return userRepository.save(entity);
     }
@@ -34,14 +35,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findById(Long aLong)  {
+    public User findById(@NonNull Long aLong)  {
         return userRepository.findById(aLong).orElseThrow(
                 ()->new UserNotFoundException(String.format("User with %d ID was not found!", aLong)));
     }
 
     @Transactional
     @Override
-    public User update(User entity, Long aLong) {
+    public User update(@NonNull User entity, @NonNull Long aLong) {
         User user = findById(aLong);
         UserMapper.USER_MAPPER.updateUser(entity, user);
         return userRepository.save(user);
@@ -49,35 +50,35 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public User deleteById(Long aLong) {
+    public User deleteById(@NonNull Long aLong) {
         User user = findById(aLong);
         userRepository.deleteById(aLong);
         return user;
     }
 
     @Override
-    public User findByEmail(String email) {
+    public User findByEmail(@NonNull String email) {
         return userRepository.findByEmail(email).orElseThrow(
                 ()->new UserNotFoundException(String.format("User with %s email was not found!", email)));
     }
 
     @Override
-    public Boolean existsByEmail(String email) {
+    public Boolean existsByEmail(@NonNull String email) {
         return userRepository.existsByEmail(email);
     }
 
     @Override
-    public List<User> findUsersByWorkspacesId(Long id) {
+    public List<User> findUsersByWorkspacesId(@NonNull Long id) {
         return userRepository.findUsersByWorkspacesId(id);
     }
 
     @Override
-    public List<User> findUsersByTasksId(Long id) {
+    public List<User> findUsersByTasksId(@NonNull Long id) {
         return userRepository.findUsersByTasksId(id);
     }
 
     @Override
-    public Boolean existsByEmailAndWorkspacesId(String email, Long workspaceId) {
+    public Boolean existsByEmailAndWorkspacesId(@NonNull String email, @NonNull Long workspaceId) {
         return userRepository.existsByEmailAndWorkspacesId(email, workspaceId);
     }
 }

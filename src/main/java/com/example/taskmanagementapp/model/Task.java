@@ -2,6 +2,10 @@ package com.example.taskmanagementapp.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Date;
 import java.util.List;
@@ -13,6 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class Task {
 
     @Id
@@ -25,19 +30,24 @@ public class Task {
 
     private String status;
 
+    @CreatedDate
     @Column(name = "creation_date")
     private Date creationDate;
+
+    @LastModifiedDate
     @Column(name = "last_modified_date")
     private Date lastModifiedDate;
+
     @Column(name = "deadline_date")
     private Date deadlineDate;
 
-    @ManyToMany()
+    @ManyToMany
     @JoinTable(name = "users_tasks", joinColumns = @JoinColumn(name = "task_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
     private List<User> performers;
 
     @ManyToOne
+    @CreatedBy
     @JoinColumn(name = "creator_id", referencedColumnName = "id")
     private User creator;
 

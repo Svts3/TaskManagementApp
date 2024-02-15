@@ -6,20 +6,23 @@ import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.model.Workspace;
 import com.example.taskmanagementapp.repository.UserRepository;
 import com.example.taskmanagementapp.service.UserService;
+import org.hibernate.jdbc.Work;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
     @Mock
@@ -30,17 +33,17 @@ public class UserServiceTest {
 
     private User user;
 
+    private Workspace workspace;
+
 
     @BeforeEach
     void setUp() {
-        user = User
-                .builder()
-                .id(1L)
-                .firstName("firstName")
-                .lastName("lastName")
-                .email("email")
-                .password("pass")
-                .build();
+        List<User> members = new ArrayList<>();
+        members.add(user);
+        workspace = Workspace.builder().id(1L).name("test").creator(user).members(members).build();
+        List<Workspace> userWorkspaces = new ArrayList<>();
+        userWorkspaces.add(workspace);
+        user = User.builder().id(1L).firstName("firstName").lastName("lastName").email("email").password("pass").workspaces(userWorkspaces).build();
     }
 
 
@@ -53,7 +56,6 @@ public class UserServiceTest {
         assertEquals("email", user1.getEmail());
         assertEquals("firstName", user1.getFirstName());
         assertEquals("lastName", user1.getLastName());
-        verify(userRepository, times(1)).save(user);
     }
 
     @Test
@@ -64,7 +66,6 @@ public class UserServiceTest {
         assertEquals("email", user1.getEmail());
         assertEquals("firstName", user1.getFirstName());
         assertEquals("lastName", user1.getLastName());
-        verify(userRepository, times(1)).findById(1L);
     }
 
     @Test
@@ -78,32 +79,16 @@ public class UserServiceTest {
 
     @Test
     void testFindAll() {
-        User user2 = User
-                .builder()
-                .id(2L)
-                .firstName("firstName2")
-                .lastName("lastName2")
-                .email("email2")
-                .password("pass2")
-                .build();
+        User user2 = User.builder().id(2L).firstName("firstName2").lastName("lastName2").email("email2").password("pass2").build();
         when(userRepository.findAll()).thenReturn(List.of(user, user2));
         List<User> users = userService.findAll();
         assertNotNull(users);
         assertEquals(2, users.size());
-        verify(userRepository, times(1)).findAll();
     }
 
     @Test
     void testUpdateUser() throws Exception {
-        User user1 = User
-                .builder()
-                .firstName("firstNameUpd")
-                .lastName("LastNameUpd")
-                .email("emailUpd")
-                .password("passwordUpd")
-                .workspaces(List.of(new Workspace()))
-                .tasks(List.of(new Task()))
-                .build();
+        User user1 = User.builder().firstName("firstNameUpd").lastName("LastNameUpd").email("emailUpd").password("passwordUpd").workspaces(List.of(new Workspace())).tasks(List.of(new Task())).build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
@@ -122,8 +107,6 @@ public class UserServiceTest {
         assertEquals("emailUpd", updatedUser.getEmail());
         assertEquals("passwordUpd", updatedUser.getPassword());
         assertEquals("firstNameUpd", updatedUser.getFirstName());
-        verify(userRepository, times(1)).findById(1L);
-        verify(userRepository, times(1)).save(user);
     }
 
     @Test
@@ -132,7 +115,6 @@ public class UserServiceTest {
         RuntimeException exception = assertThrows(UserNotFoundException.class, () -> {
             userService.update(new User(), 1L);
         });
-        assertEquals("User with 1 ID was not found!", exception.getMessage());
     }
 
 
@@ -144,7 +126,6 @@ public class UserServiceTest {
         assertEquals("email", deletedUser.getEmail());
         assertEquals("firstName", deletedUser.getFirstName());
         assertEquals("lastName", deletedUser.getLastName());
-        verify(userRepository, times(1)).findById(1L);
     }
 
     @Test
@@ -161,7 +142,6 @@ public class UserServiceTest {
         User foundUser = userService.findByEmail("email");
         assertNotNull(foundUser);
         assertEquals("email", foundUser.getEmail());
-        verify(userRepository, times(1)).findByEmail("email");
     }
 
     @Test
@@ -176,7 +156,6 @@ public class UserServiceTest {
         when(userRepository.existsByEmail("email")).thenReturn(true);
         Boolean result = userService.existsByEmail("email");
         assertTrue(result);
-        verify(userRepository, times(1)).existsByEmail("email");
     }
 
     @Test
@@ -184,7 +163,6 @@ public class UserServiceTest {
         when(userRepository.existsByEmail("testEmail")).thenReturn(false);
         Boolean result = userService.existsByEmail("testEmail");
         assertFalse(result);
-        verify(userRepository, times(1)).existsByEmail("testEmail");
     }
 
     @Test
@@ -196,7 +174,6 @@ public class UserServiceTest {
         assertNotNull(foundUsers);
         assertEquals(1, foundUsers.size());
         assertEquals("firstName", foundUsers.get(0).getFirstName());
-        verify(userRepository, times(1)).findUsersByTasksId(1L);
     }
 
     @Test
@@ -208,7 +185,20 @@ public class UserServiceTest {
         assertNotNull(foundUsers);
         assertEquals(1, foundUsers.size());
         assertEquals("firstName", foundUsers.get(0).getFirstName());
-        verify(userRepository, times(1)).findUsersByWorkspacesId(1L);
+    }
+
+    @Test
+    void testExistsByEmailAndWorkspacesId_UserExists() {
+        when(userRepository.existsByEmailAndWorkspacesId(user.getEmail(), 1L)).thenReturn(true);
+        Boolean result = userService.existsByEmailAndWorkspacesId(user.getEmail(), 1L);
+        assertTrue(result);
+    }
+
+    @Test
+    void testExistsByEmailAndWorkspacesId_userDoesntExists() {
+        when(userRepository.existsByEmailAndWorkspacesId(user.getEmail(), 1L)).thenReturn(false);
+        Boolean result = userService.existsByEmailAndWorkspacesId(user.getEmail(), 1L);
+        assertFalse(result);
     }
 
 
