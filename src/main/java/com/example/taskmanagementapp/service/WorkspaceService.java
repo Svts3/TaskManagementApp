@@ -3,6 +3,7 @@ package com.example.taskmanagementapp.service;
 import com.example.taskmanagementapp.model.Workspace;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface WorkspaceService extends GeneralService<Workspace, Long>{
     Workspace addUsersToWorkspace(Long workspaceId, List<Long>userIds);

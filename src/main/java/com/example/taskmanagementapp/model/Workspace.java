@@ -3,10 +3,13 @@ package com.example.taskmanagementapp.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "workspaces")
@@ -16,6 +19,7 @@ import java.util.Set;
 @Setter
 @Builder
 @EqualsAndHashCode
+@EntityListeners(AuditingEntityListener.class)
 @DynamicUpdate
 public class Workspace {
 
@@ -25,9 +29,11 @@ public class Workspace {
 
     private String name;
 
+    @CreatedDate
     @Column(name = "creation_date")
     private Date creationDate;
 
+    @LastModifiedDate
     @Column(name = "last_modified_date")
     private Date lastModifiedDate;
 
@@ -37,9 +43,11 @@ public class Workspace {
     private List<User> members;
 
     @OneToMany(mappedBy = "workspace")
-    private List<Task>tasks;
+    private List<Task> tasks;
 
     @ManyToOne
+    @CreatedBy
     @JoinColumn(name = "creator_id", referencedColumnName = "id")
     private User creator;
 }
+

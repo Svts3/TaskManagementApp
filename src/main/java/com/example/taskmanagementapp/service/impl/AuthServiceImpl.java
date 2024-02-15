@@ -14,6 +14,7 @@ import com.example.taskmanagementapp.security.JwtTokenProvider;
 import com.example.taskmanagementapp.security.RefreshTokenProvider;
 import com.example.taskmanagementapp.service.AuthService;
 import com.example.taskmanagementapp.service.UserService;
+import org.springframework.lang.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -58,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String register(RegisterRequestDTO registerRequestDTO) {
+    public String register(@NonNull RegisterRequestDTO registerRequestDTO) {
         if (userService.existsByEmail(registerRequestDTO.getEmail())) {
             throw new UserExistException(String.format("User %s email already exists", registerRequestDTO.getEmail()));
         }
@@ -76,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AccessTokenResponseDTO login(LoginRequestDTO request) {
+    public AccessTokenResponseDTO login(@NonNull LoginRequestDTO request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(), request.getPassword()
@@ -94,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AccessTokenResponseDTO refreshToken(RefreshToken token) {
+    public AccessTokenResponseDTO refreshToken(@NonNull RefreshToken token) {
         RefreshToken refreshToken1 = refreshTokenProvider.findByToken(token.getToken());
         if (!refreshTokenProvider.validateRefreshToken(refreshToken1.getToken())) {
             throw new RefreshTokenExpiredException(String.format("%s refresh token is expired!", refreshToken1.getToken()));

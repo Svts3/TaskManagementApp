@@ -6,6 +6,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import lombok.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Builder
@@ -20,6 +21,10 @@ public class WorkspaceDTO {
     private String name;
 
     private List<UserDTO> members;
+
+    private Date creationDate;
+
+    private Date lastModifiedDate;
 
     private UserDTO creator;
 

@@ -3,6 +3,7 @@ package com.example.taskmanagementapp.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,6 +34,8 @@ public class User implements UserDetails {
     private String email;
 
     private String password;
+
+    @CreatedDate
     @Column(name = "creation_date")
     private Date creationDate;
 
