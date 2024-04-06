@@ -1,5 +1,6 @@
 package com.example.taskmanagementapp.security.config;
 
+import com.example.taskmanagementapp.security.CustomAuthenticationEntryPoint;
 import com.example.taskmanagementapp.security.JwtTokenFilter;
 import com.example.taskmanagementapp.security.UserSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +29,15 @@ public class SecurityConfig {
     @Autowired
     private UserSecurity userSecurity;
 
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                            DefaultHttpSecurityExpressionHandler httpSecurityExpressionHandler
-    ) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.httpBasic(httpBasicConfigurer -> {
             httpBasicConfigurer.init(http);
         });
+
         http.csrf(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests(httpRequest -> {
@@ -44,8 +47,9 @@ public class SecurityConfig {
                     .anyRequest().authenticated();
         });
         http.addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-
+        http.exceptionHandling(httpSecurityExceptionHandlingConfigurer -> {
+            httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(customAuthenticationEntryPoint);
+        });
         return http.build();
     }
 

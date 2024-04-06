@@ -47,6 +47,7 @@ public class UserController {
         return ResponseEntity.ok(userDTOS);
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.example.taskmanagementapp.model.Workspace', 'READ')")
     @GetMapping("/task/{id}")
     public ResponseEntity<List<UserDTO>> findUsersByTaskId(@PathVariable("id") Long id) {
         List<User> users = userService.findUsersByTasksId(id);

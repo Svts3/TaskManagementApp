@@ -1,6 +1,7 @@
 package com.example.taskmanagementapp.service.impl;
 
 import com.example.taskmanagementapp.dto.mappers.WorkspaceMapper;
+import com.example.taskmanagementapp.exception.UserNotInWorkspaceException;
 import com.example.taskmanagementapp.exception.WorkspaceNotFoundException;
 import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.model.Workspace;
@@ -55,11 +56,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         MutableAcl acl = jdbcMutableAclService.createAcl(new ObjectIdentityImpl(savedWorkspace));
 
         PrincipalSid sid = new PrincipalSid(authentication);
-        acl.insertAce(0, BasePermission.READ, sid, true);
-        acl.insertAce(1, BasePermission.CREATE, sid, true);
-        acl.insertAce(2, BasePermission.WRITE, sid, true);
-        acl.insertAce(3, BasePermission.DELETE, sid, true);
-        acl.insertAce(4, BasePermission.ADMINISTRATION, new PrincipalSid(authentication), true);
+        acl.insertAce(acl.getEntries().size(), BasePermission.READ, sid, true);
+        acl.insertAce(acl.getEntries().size(), BasePermission.CREATE, sid, true);
+        acl.insertAce(acl.getEntries().size(), BasePermission.WRITE, sid, true);
+        acl.insertAce(acl.getEntries().size(), BasePermission.DELETE, sid, true);
+        acl.insertAce(acl.getEntries().size(), BasePermission.ADMINISTRATION, new PrincipalSid(authentication), true);
         jdbcMutableAclService.updateAcl(acl);
         return savedWorkspace;
     }
@@ -109,6 +110,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     public Workspace removeUserFromWorkspace(@NonNull Long workspaceId, @NonNull Long userId) {
         Workspace workspace = findById(workspaceId);
         User user = userService.findById(userId);
+        if(!workspace.getMembers().contains(user)){
+            throw new UserNotInWorkspaceException(String.format("User %d is not in the workspace", userId));
+        }
         workspace.getMembers().removeIf(user1 -> user1.getId().equals(userId));
         MutableAcl acl = (MutableAcl) jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace));
         acl.getEntries().removeIf(entry -> entry.getSid().equals(new PrincipalSid(user.getEmail())));

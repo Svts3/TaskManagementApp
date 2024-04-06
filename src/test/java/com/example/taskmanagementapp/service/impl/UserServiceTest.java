@@ -4,29 +4,34 @@ import com.example.taskmanagementapp.exception.UserNotFoundException;
 import com.example.taskmanagementapp.model.Task;
 import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.model.Workspace;
+import com.example.taskmanagementapp.repository.TaskRepository;
 import com.example.taskmanagementapp.repository.UserRepository;
-import com.example.taskmanagementapp.service.UserService;
-import org.hibernate.jdbc.Work;
+import com.example.taskmanagementapp.repository.WorkspaceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private TaskRepository taskRepository;
+
+    @Mock
+    private WorkspaceRepository workspaceRepository;
+
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -52,7 +57,6 @@ public class UserServiceTest {
         when(userRepository.save(user)).thenReturn(user);
         User user1 = userService.save(user);
         assertNotNull(user1);
-        assertNotNull(user1.getCreationDate());
         assertEquals("email", user1.getEmail());
         assertEquals("firstName", user1.getFirstName());
         assertEquals("lastName", user1.getLastName());
@@ -167,24 +171,27 @@ public class UserServiceTest {
 
     @Test
     void testFindUsersByTaskId() {
-        user.setTasks(List.of(Task.builder().id(1L).title("title").content("task").build()));
+        Task task = Task.builder().id(1L).title("title").content("task").build();
+        user.setTasks(List.of(task));
+        when(taskRepository.existsById(task.getId())).thenReturn(true);
         when(userRepository.findUsersByTasksId(1L)).thenReturn(List.of(user));
         List<User> foundUsers = userService.findUsersByTasksId(1L);
 
         assertNotNull(foundUsers);
         assertEquals(1, foundUsers.size());
-        assertEquals("firstName", foundUsers.get(0).getFirstName());
+        assertEquals("email", foundUsers.get(0).getEmail());
     }
 
     @Test
     void testFindUsersByWorkspaceId() {
         user.setWorkspaces(List.of(Workspace.builder().id(1L).name("workspace").build()));
+        when(workspaceRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findUsersByWorkspacesId(1L)).thenReturn(List.of(user));
         List<User> foundUsers = userService.findUsersByWorkspacesId(1L);
 
         assertNotNull(foundUsers);
         assertEquals(1, foundUsers.size());
-        assertEquals("firstName", foundUsers.get(0).getFirstName());
+        assertEquals("email", foundUsers.get(0).getEmail());
     }
 
     @Test

@@ -48,7 +48,7 @@ public class Task {
 
     @ManyToOne
     @CreatedBy
-    @JoinColumn(name = "creator_id", referencedColumnName = "id")
+    @JoinColumn(name = "creator_id", referencedColumnName = "id", nullable = false)
     private User creator;
 
     @ManyToOne
