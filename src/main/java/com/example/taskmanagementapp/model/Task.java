@@ -17,6 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@EqualsAndHashCode
 @EntityListeners(AuditingEntityListener.class)
 public class Task {
 

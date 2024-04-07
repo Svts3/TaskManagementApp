@@ -9,25 +9,22 @@ import com.example.taskmanagementapp.repository.WorkspaceRepository;
 import com.example.taskmanagementapp.service.UserService;
 import com.example.taskmanagementapp.service.WorkspaceService;
 import jakarta.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
-import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.prepost.PostFilter;
-import org.springframework.security.acls.domain.AccessControlEntryImpl;
 import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.jdbc.JdbcMutableAclService;
 import org.springframework.security.acls.model.AccessControlEntry;
 import org.springframework.security.acls.model.MutableAcl;
-import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.security.acls.model.Permission;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,7 +35,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     private JdbcMutableAclService jdbcMutableAclService;
 
     private UserService userService;
-
 
 
     @Autowired
@@ -66,7 +62,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     }
 
     @PostFilter("hasPermission(filterObject, 'READ')")
-    @Override
     public List<Workspace> findAll() {
         return workspaceRepository.findAll();
     }
@@ -78,7 +73,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
     @Transactional
     @Override
-    public Workspace update(@NonNull Workspace entity,@NonNull Long aLong) {
+    public Workspace update(@NonNull Workspace entity, @NonNull Long aLong) {
         Workspace workspace = findById(aLong);
         WorkspaceMapper.WORKSPACE_MAPPER.updateWorkspace(entity, workspace);
         return workspaceRepository.save(workspace);
@@ -100,7 +95,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         MutableAcl acl = (MutableAcl) jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace));
         users.forEach(user -> {
             acl.insertAce(0, BasePermission.READ, new PrincipalSid(user.getEmail()), true);
+            user.getWorkspaces().add(workspace);
+            userService.save(user);
         });
+
         jdbcMutableAclService.updateAcl(acl);
         return workspaceRepository.save(workspace);
     }
@@ -110,7 +108,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     public Workspace removeUserFromWorkspace(@NonNull Long workspaceId, @NonNull Long userId) {
         Workspace workspace = findById(workspaceId);
         User user = userService.findById(userId);
-        if(!workspace.getMembers().contains(user)){
+        if (!workspace.getMembers().contains(user)) {
             throw new UserNotInWorkspaceException(String.format("User %d is not in the workspace", userId));
         }
         workspace.getMembers().removeIf(user1 -> user1.getId().equals(userId));
@@ -123,7 +121,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     @Override
     public Workspace findByTasksId(@NonNull Long id) {
         return workspaceRepository.findByTasksId(id).orElseThrow(
-                ()->new WorkspaceNotFoundException(String.format("Workspace by task id %d was not found!", id)));
+                () -> new WorkspaceNotFoundException(String.format("Workspace by task id %d was not found!", id)));
     }
 
     @Transactional

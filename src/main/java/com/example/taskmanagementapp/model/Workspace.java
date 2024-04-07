@@ -37,7 +37,7 @@ public class Workspace {
     @Column(name = "last_modified_date")
     private Date lastModifiedDate;
 
-    @ManyToMany()
+    @ManyToMany
     @JoinTable(name = "users_workspaces", joinColumns = @JoinColumn(name = "workspace_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
     private List<User> members;

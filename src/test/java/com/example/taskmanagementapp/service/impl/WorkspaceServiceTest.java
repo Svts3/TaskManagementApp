@@ -77,6 +77,7 @@ public class WorkspaceServiceTest {
                 .id(1L)
                 .email("test.test@gmail.com")
                 .password("pass")
+                .workspaces(new ArrayList<>())
                 .roles(List.of(new Role(1L, "ROLE_ADMIN"))).build();
 
         authentication = new TestingAuthenticationToken(user, null, "ROLE_ADMIN");

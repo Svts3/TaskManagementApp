@@ -246,7 +246,7 @@ public class WorkspaceControllerTest {
         Workspace workspace = Workspace.builder().name("test").members(members).build();
         workspaceService.save(workspace);
 
-        User user2 = User.builder().email("test2").build();
+        User user2 = User.builder().email("test2").workspaces(new ArrayList<>()).build();
         userService.save(user2);
         workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("ADMIN"));
 
@@ -303,7 +303,7 @@ public class WorkspaceControllerTest {
     void testRemoveUserFromWorkspace_WithValidData_ReturnOk() throws Exception {
         List<User> members = new ArrayList<>();
         members.add(user);
-        User user2 = User.builder().email("test").build();
+        User user2 = User.builder().email("test").workspaces(new ArrayList<>()).build();
         Workspace workspace = Workspace.builder().name("test").members(members).build();
         userService.save(user2);
         workspaceService.save(workspace);
@@ -339,7 +339,7 @@ public class WorkspaceControllerTest {
     void testRemoveUserFromWorkspace_WithInvalidWorkspaceId_ReturnNotFound() throws Exception {
         List<User> members = new ArrayList<>();
         members.add(user);
-        User user2 = User.builder().email("test").build();
+        User user2 = User.builder().email("test").workspaces(new ArrayList<>()).build();
         Workspace workspace = Workspace.builder().name("test").members(members).build();
         userService.save(user2);
         workspaceService.save(workspace);

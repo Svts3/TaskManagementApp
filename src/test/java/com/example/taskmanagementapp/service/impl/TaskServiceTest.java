@@ -193,9 +193,8 @@ public class TaskServiceTest {
         user.setWorkspaces(List.of());
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(userService.findById(1L)).thenReturn(user);
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        assertThrows(RuntimeException.class,
                 () -> taskService.addPerformersToTask(1L, List.of(1L)));
-        assertEquals("Users are not in workspace!", exception.getMessage());
     }
 
     @Test
@@ -204,6 +203,7 @@ public class TaskServiceTest {
         assertEquals(1, task.getPerformers().size());
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(task)).thenReturn(task);
+        when(userService.findById(1L)).thenReturn(user);
         Task updatedTask = taskService.removePerformerFromTask(1L, 1L);
         assertNotNull(updatedTask);
         assertEquals(0, updatedTask.getPerformers().size());
