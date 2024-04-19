@@ -42,7 +42,7 @@ public class Workspace {
             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
     private List<User> members;
 
-    @OneToMany(mappedBy = "workspace")
+    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL)
     private List<Task> tasks;
 
     @ManyToOne

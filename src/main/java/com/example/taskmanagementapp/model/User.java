@@ -54,7 +54,7 @@ public class User implements UserDetails {
     @ManyToMany(mappedBy = "performers")
     private List<Task>tasks;
 
-    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST})
+    @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Workspace>workspaces;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

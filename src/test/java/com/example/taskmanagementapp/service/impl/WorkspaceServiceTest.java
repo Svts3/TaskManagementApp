@@ -30,8 +30,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-//TODO: Updated WorkspaceService[findUsersByWorkspaceId()].
-// Write unit test if workspace not found then test if exception is thrown
 @ExtendWith(MockitoExtension.class)
 public class WorkspaceServiceTest {
 
@@ -108,7 +106,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void findById() {
+    void findById_WithValidId_ReturnValidWorkspace() {
         when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
         Workspace foundWorkspace = workspaceService.findById(1L);
         assertNotNull(foundWorkspace);
@@ -116,14 +114,14 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void findById_NotFound_ThrowWorkspaceNotFoundException() {
+    void findById_WithInvalidId_ThrowWorkspaceNotFoundException() {
         when(workspaceRepository.findById(1L)).thenReturn(Optional.empty());
         RuntimeException exception = assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.findById(1L));
         assertEquals(String.format(WORKSPACE_NOT_FOUND_EXCEPTION_MESSAGE, 1L), exception.getMessage());
     }
 
     @Test
-    void testFindAll() {
+    void testFindAll_ReturnAllWorkspaces() {
         Workspace workspace2 = new Workspace();
         when(workspaceRepository.findAll()).thenReturn(List.of(workspace, workspace2));
         List<Workspace> foundWorkspaces = workspaceService.findAll();
@@ -132,7 +130,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testUpdate() {
+    void testUpdate_WithValidData_UpdateSuccessfully() {
         Workspace workspace2 = Workspace
                 .builder()
                 .name("workspaceUpd")
@@ -151,7 +149,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testUpdate_NotFound_ThrowWorkspaceNotFoundException() {
+    void testUpdate_WithInvalidWorkspaceId_ThrowWorkspaceNotFoundException() {
         Workspace workspace2 = Workspace.builder().name("workspaceUpd").build();
         when(workspaceRepository.findById(1L)).thenReturn(Optional.empty());
         RuntimeException exception = assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.update(workspace2, 1L));
@@ -159,7 +157,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testDeleteById() {
+    void testDeleteById_WithValidId_DeleteSuccessfully() {
         when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
         Workspace deletedWorkspace = workspaceService.deleteById(1L);
         assertNotNull(deletedWorkspace);
@@ -167,14 +165,14 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testDeleteById_NotFound_ThrowWorkspaceNotFoundException() {
+    void testDeleteById_WithInvalidId_ThrowWorkspaceNotFoundException() {
         when(workspaceRepository.findById(1L)).thenReturn(Optional.empty());
         RuntimeException exception = assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.deleteById(1L));
         assertEquals(String.format(WORKSPACE_NOT_FOUND_EXCEPTION_MESSAGE, 1L), exception.getMessage());
     }
 
     @Test
-    void testAddUsersToWorkspace() {
+    void testAddUsersToWorkspace_WithValidData_AddUsersToWorkspaceSuccessfully() {
         when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
         when(userService.findById(1L)).thenReturn(user);
         when(jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace))).thenReturn(acl);
@@ -189,7 +187,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testAddUsersToWorkspace_NotFound_ThrowWorkspaceNotFoundException() {
+    void testAddUsersToWorkspace_WithInvalidWorkspaceId_ThrowWorkspaceNotFoundException() {
         when(workspaceRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(WorkspaceNotFoundException.class,
@@ -198,7 +196,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testRemoveUsersFromWorkspace() {
+    void testRemoveUsersFromWorkspace_WithValidData_RemoveUsersSuccessfully() {
         User user2 = User.builder().id(2L).email("test2.test@gmail.com").password("pass")
                 .roles(List.of(new Role(1L, "ROLE_USER"))).build();
 
@@ -227,7 +225,7 @@ public class WorkspaceServiceTest {
 
 
     @Test
-    void testFindByTasksId() {
+    void testFindByTasksId_WithValidTaskId_ReturnValidTask() {
         when(workspaceRepository.findByTasksId(1L)).thenReturn(Optional.of(workspace));
         Workspace workspace1 = workspaceService.findByTasksId(1L);
 
@@ -236,7 +234,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testFindByTasksId_workspaceNotFound_throwWorkspaceNotFoundException() {
+    void testFindByTasksId_WithInvalidWorkspaceId_ThrowWorkspaceNotFoundException() {
         when(workspaceRepository.findByTasksId(1L)).thenReturn(Optional.empty());
         WorkspaceNotFoundException exception =
                 assertThrows(WorkspaceNotFoundException.class, () -> workspaceService.findByTasksId(1L));
@@ -244,7 +242,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testAddPermissionToUserInWorkspace() {
+    void testAddPermissionToUserInWorkspace_WithValidData_AddPermissionSuccessfully() {
         when(userService.findById(user.getId())).thenReturn(user);
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
 
@@ -263,7 +261,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testAddPermissionToUserInWorkspaceLowerCase() {
+    void testAddPermissionToUserInWorkspace_WithLowerCase_AddPermissionSuccessfully() {
         when(userService.findById(user.getId())).thenReturn(user);
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
 
@@ -282,7 +280,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testAddPermissionToUserInWorkspace_WorkspaceNotFound_ThrowWorkspaceNotFoundException() {
+    void testAddPermissionToUserInWorkspace_WithInvalidWorkspaceId_ThrowWorkspaceNotFoundException() {
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.empty());
         WorkspaceNotFoundException exception = assertThrows(WorkspaceNotFoundException.class,
                 () -> workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("WRITE")));
@@ -290,7 +288,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testRemovePermissionsForUserInWorkspace() {
+    void testRemovePermissionsForUserInWorkspace_WithValidData_RemovePermissionsForUserSuccessfully() {
         when(userService.findById(user.getId())).thenReturn(user);
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
         when(jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace))).thenReturn(acl);
@@ -307,7 +305,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testRemovePermissionsForUserInWorkspace_workspaceNotFound_ThrowWorkspaceNotFoundException() {
+    void testRemovePermissionsForUserInWorkspace_WithInvalidWorkspaceId_ThrowWorkspaceNotFoundException() {
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.empty());
         WorkspaceNotFoundException exception = assertThrows(WorkspaceNotFoundException.class,
                 () -> workspaceService.removePermissionsForUserInWorkspace(workspace.getId(),

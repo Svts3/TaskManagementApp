@@ -53,7 +53,7 @@ public class UserServiceTest {
 
 
     @Test
-    void testSave() {
+    void testSave_WithValidData_SaveSuccessfully() {
         when(userRepository.save(user)).thenReturn(user);
         User user1 = userService.save(user);
         assertNotNull(user1);
@@ -63,7 +63,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testFindById() throws Exception {
+    void testFindById_WithValidId_ReturnValidUser() throws Exception {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         User user1 = userService.findById(1L);
         assertNotNull(user1);
@@ -73,7 +73,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testFindById_ThrowException() throws Exception {
+    void testFindById_WithInvalidId_ThrowException() throws Exception {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
         RuntimeException exception = assertThrows(UserNotFoundException.class, () -> {
             userService.findById(1L);
@@ -82,7 +82,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testFindAll() {
+    void testFindAll_ReturnAllUsers() {
         User user2 = User.builder().id(2L).firstName("firstName2").lastName("lastName2").email("email2").password("pass2").build();
         when(userRepository.findAll()).thenReturn(List.of(user, user2));
         List<User> users = userService.findAll();
@@ -91,7 +91,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testUpdateUser() throws Exception {
+    void testUpdateUser_WithValidData_UpdateSuccessfully() throws Exception {
         User user1 = User.builder().firstName("firstNameUpd").lastName("LastNameUpd").email("emailUpd").password("passwordUpd").workspaces(List.of(new Workspace())).tasks(List.of(new Task())).build();
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -123,7 +123,7 @@ public class UserServiceTest {
 
 
     @Test
-    void testDeleteById() {
+    void testDeleteById_WithValidId_DeleteSuccessfully() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         User deletedUser = userService.deleteById(1L);
         assertNotNull(deletedUser);
@@ -141,7 +141,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testFindByEmail() {
+    void testFindByEmail_WithValidEmail_ReturnValidUser() {
         when(userRepository.findByEmail("email")).thenReturn(Optional.of(user));
         User foundUser = userService.findByEmail("email");
         assertNotNull(foundUser);
@@ -156,21 +156,21 @@ public class UserServiceTest {
     }
 
     @Test
-    void testExistsByEmail() {
+    void testExistsByEmail_WithValidEmail_ReturnTrue() {
         when(userRepository.existsByEmail("email")).thenReturn(true);
         Boolean result = userService.existsByEmail("email");
         assertTrue(result);
     }
 
     @Test
-    void testExistsByEmail_NotFound() {
+    void testExistsByEmail_WithInvalidId_ThrowNotFoundException() {
         when(userRepository.existsByEmail("testEmail")).thenReturn(false);
         Boolean result = userService.existsByEmail("testEmail");
         assertFalse(result);
     }
 
     @Test
-    void testFindUsersByTaskId() {
+    void testFindUsersByTaskId_WithValidTaskId_ReturnValidUser() {
         Task task = Task.builder().id(1L).title("title").content("task").build();
         user.setTasks(List.of(task));
         when(taskRepository.existsById(task.getId())).thenReturn(true);
@@ -183,7 +183,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testFindUsersByWorkspaceId() {
+    void testFindUsersByWorkspaceId_WithValidWorkspaceId_ReturnValidUsers() {
         user.setWorkspaces(List.of(Workspace.builder().id(1L).name("workspace").build()));
         when(workspaceRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findUsersByWorkspacesId(1L)).thenReturn(List.of(user));
@@ -195,14 +195,14 @@ public class UserServiceTest {
     }
 
     @Test
-    void testExistsByEmailAndWorkspacesId_UserExists() {
+    void testExistsByEmailAndWorkspacesId_WithUserExists_ReturnTrue() {
         when(userRepository.existsByEmailAndWorkspacesId(user.getEmail(), 1L)).thenReturn(true);
         Boolean result = userService.existsByEmailAndWorkspacesId(user.getEmail(), 1L);
         assertTrue(result);
     }
 
     @Test
-    void testExistsByEmailAndWorkspacesId_userDoesntExists() {
+    void testExistsByEmailAndWorkspacesId_WithUserDoesntExists_ReturnFalse() {
         when(userRepository.existsByEmailAndWorkspacesId(user.getEmail(), 1L)).thenReturn(false);
         Boolean result = userService.existsByEmailAndWorkspacesId(user.getEmail(), 1L);
         assertFalse(result);
