@@ -5,11 +5,14 @@ import com.example.taskmanagementapp.dto.LoginRequestDTO;
 import com.example.taskmanagementapp.dto.RegisterRequestDTO;
 import com.example.taskmanagementapp.exception.handler.GlobalExceptionHandler;
 import com.example.taskmanagementapp.model.RefreshToken;
+import com.example.taskmanagementapp.model.Role;
+import com.example.taskmanagementapp.repository.RoleRepository;
 import com.example.taskmanagementapp.security.RefreshTokenProvider;
 import com.example.taskmanagementapp.security.config.SecurityConfig;
 import com.example.taskmanagementapp.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.testcontainers.containers.MySQLContainer;
@@ -59,13 +63,19 @@ public class AuthControllerTest {
     @Autowired
     UserService userService;
 
+    @Autowired
+    RoleRepository roleRepository;
+
+
     @BeforeEach
     void setUp() {
-        mockMvc = mockMvc = MockMvcBuilders
+        mockMvc  = MockMvcBuilders
                 .standaloneSetup(authController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .apply(springSecurity(filterChainProxy))
                 .build();
+        roleRepository.save(new Role("ROLE_USER"));
+        roleRepository.save(new Role("ROLE_ADMIN"));
     }
 
     @Test

@@ -88,7 +88,7 @@ public class WorkspaceServiceTest {
     }
 
     @Test
-    void testSave() {
+    void testSave_WithValidWorkspace_SaveSuccessfully() {
         when(jdbcMutableAclService.createAcl(new ObjectIdentityImpl(workspace))).thenReturn(acl);
 
         when(workspaceRepository.save(workspace)).thenReturn(workspace);
