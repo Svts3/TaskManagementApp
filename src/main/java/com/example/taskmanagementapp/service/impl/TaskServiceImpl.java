@@ -2,21 +2,20 @@ package com.example.taskmanagementapp.service.impl;
 
 import com.example.taskmanagementapp.dto.mappers.TaskMapper;
 import com.example.taskmanagementapp.exception.TaskNotFoundException;
-import com.example.taskmanagementapp.exception.UserNotFoundException;
+import com.example.taskmanagementapp.exception.UserNotInWorkspaceException;
 import com.example.taskmanagementapp.model.Task;
 import com.example.taskmanagementapp.model.User;
+import com.example.taskmanagementapp.model.Workspace;
 import com.example.taskmanagementapp.repository.TaskRepository;
-import com.example.taskmanagementapp.repository.UserRepository;
 import com.example.taskmanagementapp.service.TaskService;
 import com.example.taskmanagementapp.service.UserService;
+import com.example.taskmanagementapp.service.WorkspaceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PostFilter;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -25,68 +24,77 @@ public class TaskServiceImpl implements TaskService {
 
     private UserService userService;
 
+    private WorkspaceService workspaceService;
+
     @Autowired
-    public TaskServiceImpl(TaskRepository taskRepository, UserService userService) {
+    public TaskServiceImpl(TaskRepository taskRepository, UserService userService,
+                           WorkspaceService workspaceService) {
         this.taskRepository = taskRepository;
         this.userService = userService;
+        this.workspaceService = workspaceService;
     }
 
     @Override
-    public Task save(Task entity) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        entity.setCreationDate(new Date());
-        entity.setCreator(userService.findByEmail(authentication.getName()));
+    public Task save(@NonNull Task entity) {
         return taskRepository.save(entity);
     }
 
+    @PostFilter("filterObject.creator.id==authentication.principal.id")
     @Override
     public List<Task> findAll() {
         return taskRepository.findAll();
     }
 
     @Override
-    public Task findById(Long aLong) {
+    public Task findById(@NonNull Long aLong) {
         return taskRepository.findById(aLong).orElseThrow(
                 () -> new TaskNotFoundException(String.format("Task with %d ID was not found!", aLong)));
     }
 
     @Override
-    public Task update(Task entity, Long aLong) {
+    public Task update(@NonNull Task entity, @NonNull Long aLong) {
         Task task = findById(aLong);
         TaskMapper.TASK_MAPPER.updateTask(entity, task);
-        task.setLastModifiedDate(new Date());
         return taskRepository.save(task);
     }
 
     @Override
-    public Task deleteById(Long aLong) {
+    public Task deleteById(@NonNull Long aLong) {
         Task task = findById(aLong);
         taskRepository.deleteById(aLong);
         return task;
     }
 
     @Override
-    public List<Task> findByWorkspaceId(Long id) {
+    public List<Task> findByWorkspaceId(@NonNull Long id) {
         return taskRepository.findByWorkspaceId(id);
     }
 
     @Override
-    public Task addPerformersToTask(Long taskId, List<Long> userIds) {
+    public Task addPerformersToTask(@NonNull Long taskId, @NonNull List<Long> userIds) {
         Task task = findById(taskId);
 
         List<User> performersToAdd = userIds.stream().map(userId -> userService.findById(userId)).toList();
 
-        if (!performersToAdd.stream().allMatch(user -> user.getWorkspaces().contains(task.getWorkspace()))) {
-            throw new RuntimeException("Users are not in workspace!");
+        for (User performer : performersToAdd) {
+            List<Workspace> performerWorkspaces = performer.getWorkspaces();
+                if (!performerWorkspaces.contains(task.getWorkspace())) {
+                    throw new UserNotInWorkspaceException(String.format("User[%s] not in workspace!", performer.getEmail()));
+                }
         }
+
         task.getPerformers().addAll(performersToAdd);
         return taskRepository.save(task);
     }
 
     @Override
-    public Task removePerformerFromTask(Long taskId, Long performerId) {
+    public Task removePerformerFromTask(@NonNull Long taskId, @NonNull Long performerId) {
         Task task = findById(taskId);
-        task.getPerformers().removeIf(performer -> performer.getId().equals(performerId));
+        User performer = userService.findById(performerId);
+        if(!task.getPerformers().removeIf(p -> p.getId().equals(performer.getId()))){
+            throw new UserNotInWorkspaceException(String.format("User[%s] is not in workspace!",
+                    performer.getEmail()));
+        };
         return taskRepository.save(task);
     }
 }

@@ -1,10 +1,12 @@
 package com.example.taskmanagementapp.security.config;
 
+import com.example.taskmanagementapp.security.CustomAuthenticationEntryPoint;
 import com.example.taskmanagementapp.security.JwtTokenFilter;
 import com.example.taskmanagementapp.security.UserSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.acls.AclPermissionEvaluator;
@@ -27,13 +29,15 @@ public class SecurityConfig {
     @Autowired
     private UserSecurity userSecurity;
 
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                            DefaultHttpSecurityExpressionHandler httpSecurityExpressionHandler
-    ) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.httpBasic(httpBasicConfigurer -> {
             httpBasicConfigurer.init(http);
         });
+
         http.csrf(AbstractHttpConfigurer::disable);
 
         http.authorizeHttpRequests(httpRequest -> {
@@ -43,8 +47,9 @@ public class SecurityConfig {
                     .anyRequest().authenticated();
         });
         http.addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-
+        http.exceptionHandling(httpSecurityExceptionHandlingConfigurer -> {
+            httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(customAuthenticationEntryPoint);
+        });
         return http.build();
     }
 

@@ -33,7 +33,7 @@ public class JwtTokenProvider {
 
     public Boolean validateToken(String token){
         try{
-            Jwts.parserBuilder().setSigningKey(generateKey()).build();
+            Jwts.parserBuilder().setSigningKey(generateKey()).build().parseClaimsJws(token);
             return true;
         }catch (ExpiredJwtException | MalformedJwtException | UnsupportedJwtException |
                 PrematureJwtException expiredJwtException){

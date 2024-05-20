@@ -63,7 +63,7 @@ public class WorkspaceController {
         return ResponseEntity.ok(workspaceDTO);
     }
 
-    @PreAuthorize("hasPermission(#id, 'com.example.taskmanagementapp.model.Workspace', 'UPDATE')")
+    @PreAuthorize("hasPermission(#id, 'com.example.taskmanagementapp.model.Workspace', 'WRITE')")
     @PatchMapping("/{id}")
     public ResponseEntity<WorkspaceDTO> update(@PathVariable("id") Long id, @RequestBody Workspace workspace) {
         Workspace workspace1 = workspaceService.update(workspace, id);
@@ -72,7 +72,7 @@ public class WorkspaceController {
     }
 
     @PreAuthorize("hasPermission(#id, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
-    @DeleteMapping("/{id}/users/{userId}")
+    @PatchMapping("/{id}/users/{userId}")
     public ResponseEntity<WorkspaceDTO> removeUserFromWorkspace(@PathVariable("id") Long id, @PathVariable("userId") Long userId) {
         Workspace workspace = workspaceService.removeUserFromWorkspace(id, userId);
         WorkspaceDTO workspaceDTO = WorkspaceMapper.WORKSPACE_MAPPER.workspaceToWorkspaceDTO(workspace);
