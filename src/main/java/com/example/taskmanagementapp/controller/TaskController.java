@@ -30,13 +30,6 @@ public class TaskController {
         this.taskService = taskService;
         this.userServiceImpl = userServiceImpl;
     }
-
-    @GetMapping("/")
-    public ResponseEntity<List<TaskDTO>> findAll() {
-        List<Task> tasks = taskService.findAll();
-        List<TaskDTO> taskDTOS = TaskMapper.TASK_MAPPER.tasksToTaskDTOs(tasks);
-        return ResponseEntity.ok(taskDTOS);
-    }
     @PreAuthorize("hasPermission(#id, 'com.example.taskmanagementapp.model.Workspace', 'READ')")
     @GetMapping("/workspace/{id}")
     public ResponseEntity<List<TaskDTO>> findByWorkspaceId(@PathVariable(name = "id") Long id) {
