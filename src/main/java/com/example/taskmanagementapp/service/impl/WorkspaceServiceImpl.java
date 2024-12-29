@@ -48,6 +48,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     @Override
     public Workspace save(@NonNull Workspace entity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User)authentication.getPrincipal();
+        entity.setMembers(List.of(user));
         Workspace savedWorkspace = workspaceRepository.save(entity);
         MutableAcl acl = jdbcMutableAclService.createAcl(new ObjectIdentityImpl(savedWorkspace));
 
