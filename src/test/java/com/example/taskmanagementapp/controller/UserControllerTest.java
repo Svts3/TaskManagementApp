@@ -55,7 +55,7 @@ public class UserControllerTest {
     @Container
     @ServiceConnection
     static MySQLContainer<?> mySQLContainer = new MySQLContainer<>(
-            "mysql"
+            "mysql:8.0"
     );
 
 

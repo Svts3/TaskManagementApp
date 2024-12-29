@@ -75,7 +75,7 @@ public class WorkspaceControllerTest {
     @Container
     @ServiceConnection
     static MySQLContainer<?> mySQLContainer = new MySQLContainer<>(
-            "mysql"
+            "mysql:8.0"
     );
 
     @BeforeEach

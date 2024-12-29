@@ -44,7 +44,7 @@ public class AuthControllerTest {
     @Container
     @ServiceConnection
     static MySQLContainer<?> mySQLContainer = new MySQLContainer<>(
-            "mysql"
+            "mysql:8.0"
     );
     MockMvc mockMvc;
 
