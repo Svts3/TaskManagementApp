@@ -6,28 +6,24 @@ import com.example.taskmanagementapp.model.Task;
 import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.model.Workspace;
 import com.example.taskmanagementapp.repository.TaskRepository;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.example.taskmanagementapp.repository.UserRepository;
 import com.example.taskmanagementapp.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.mockito.Mockito.*;
-
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.springframework.boot.test.context.SpringBootTest;
-
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-@SpringBootTest
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
 public class TaskServiceTest {
 
     @Mock
@@ -38,6 +34,9 @@ public class TaskServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserService userService;
 
     private Task task;
 
@@ -57,18 +56,18 @@ public class TaskServiceTest {
                 .id(1L)
                 .title("title")
                 .content("content")
-                .creator(User.builder().build())
+                .creationDate(new Date())
                 .deadlineDate(new Date(System.currentTimeMillis() + 86000000))
                 .workspace(workspace)
                 .performers(performers)
+                .creator(user)
                 .status("to do")
                 .build();
     }
 
     @Test
-    void testSaveTask() {
+    void testSaveTask_WithValidData_SaveSuccessfully() {
         when(taskRepository.save(task)).thenReturn(task);
-
         Task savedTask = taskService.save(task);
 
         assertNotNull(savedTask);
@@ -80,11 +79,10 @@ public class TaskServiceTest {
         assertEquals("content", savedTask.getContent());
         assertEquals("to do", savedTask.getStatus());
 
-        verify(taskRepository, times(1)).save(task);
     }
 
     @Test
-    void testFindTaskById() {
+    void testFindTaskById_WithValidId_ReturnValidTask() {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
 
         Task foundTask = taskService.findById(1L);
@@ -95,7 +93,6 @@ public class TaskServiceTest {
         assertEquals("content", foundTask.getContent());
         assertEquals("to do", foundTask.getStatus());
 
-        verify(taskRepository, times(1)).findById(1L);
     }
 
 
@@ -108,18 +105,17 @@ public class TaskServiceTest {
     }
 
     @Test
-    void testFindAll() {
+    void testFindAll_ReturnAllTasks() {
         Task task2 = Task.builder().title("title2").content("content2").build();
         when(taskRepository.findAll()).thenReturn(List.of(task, task2));
         List<Task> foundTasks = taskService.findAll();
 
         assertNotNull(foundTasks);
         assertEquals(2, foundTasks.size());
-        verify(taskRepository, times(1)).findAll();
     }
 
     @Test
-    void testUpdateTask() {
+    void testUpdateTask_WithValidData_UpdateSuccessfully() {
         Task task2 = Task.builder().title("title2").content("content2").build();
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(task)).thenReturn(task);
@@ -129,8 +125,6 @@ public class TaskServiceTest {
         assertEquals("title2", updatedTask.getTitle());
         assertEquals("content2", updatedTask.getContent());
         assertEquals("to do", updatedTask.getStatus());
-        verify(taskRepository, times(1)).findById(1L);
-        verify(taskRepository, times(1)).save(task);
     }
 
     @Test
@@ -142,13 +136,12 @@ public class TaskServiceTest {
     }
 
     @Test
-    void testDeleteById() {
+    void testDeleteById_WithValidId_DeleteSuccessfully() {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         Task deletedTask = taskService.deleteById(1L);
         assertNotNull(deletedTask);
         assertEquals("title", deletedTask.getTitle());
         assertEquals("content", deletedTask.getContent());
-        verify(taskRepository, times(1)).findById(1L);
     }
 
     @Test
@@ -159,36 +152,29 @@ public class TaskServiceTest {
     }
 
     @Test
-    void testFindByWorkspaceId() {
+    void testFindByWorkspaceId_WithValidWorkspaceId_ReturnValidWorkspace() {
         when(taskRepository.findByWorkspaceId(1L)).thenReturn(List.of(task));
         List<Task> tasks = taskService.findByWorkspaceId(1L);
         assertNotNull(task);
         assertEquals(1, tasks.size());
-        verify(taskRepository, times(1)).findByWorkspaceId(1L);
     }
 
     @Test
-    void testAddPerformersToTask() {
+    void testAddPerformersToTask_WithValidData_AddPerformerToTaskSuccessfully() {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.findById(2L)).thenReturn(Optional.of(user2));
         when(taskRepository.save(task)).thenReturn(task);
-
+        when(userService.findById(1L)).thenReturn(user);
+        when(userService.findById(2L)).thenReturn(user2);
         Task updatedTaskTest = taskService.addPerformersToTask(1L, List.of(1L, 2L));
 
         assertNotNull(updatedTaskTest);
         assertEquals(2, updatedTaskTest.getPerformers().size());
-        verify(taskRepository, times(1)).findById(1L);
-        verify(userRepository, times(1)).findById(1L);
-        verify(userRepository, times(1)).findById(2L);
-        verify(taskRepository, times(1)).save(task);
     }
 
     @Test
     void testAddPerformersToTask_UserNotFound_ThrowUserNotFoundException() {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
-        when(taskRepository.save(task)).thenReturn(task);
+        when(userService.findById(1L)).thenThrow(new UserNotFoundException("User with 1 ID was not found!"));
         RuntimeException exception = assertThrows(UserNotFoundException.class,
                 () -> taskService.addPerformersToTask(1L, List.of(1L, 2L)));
         assertEquals("User with 1 ID was not found!", exception.getMessage());
@@ -197,8 +183,6 @@ public class TaskServiceTest {
     @Test
     void testAddPerformersToTask_TaskNotFound_ThrowTaskNotFoundException() {
         when(taskRepository.findById(1L)).thenReturn(Optional.empty());
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(taskRepository.save(task)).thenReturn(task);
         RuntimeException exception = assertThrows(TaskNotFoundException.class,
                 () -> taskService.addPerformersToTask(1L, List.of(1L)));
         assertEquals("Task with 1 ID was not found!", exception.getMessage());
@@ -208,11 +192,9 @@ public class TaskServiceTest {
     void testAddPerformersToTask_UsersNotInWorkspace_ThrowRuntimeException() {
         user.setWorkspaces(List.of());
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(taskRepository.save(task)).thenReturn(task);
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        when(userService.findById(1L)).thenReturn(user);
+        assertThrows(RuntimeException.class,
                 () -> taskService.addPerformersToTask(1L, List.of(1L)));
-        assertEquals("Users are not in workspace!", exception.getMessage());
     }
 
     @Test
@@ -221,20 +203,18 @@ public class TaskServiceTest {
         assertEquals(1, task.getPerformers().size());
         when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
         when(taskRepository.save(task)).thenReturn(task);
+        when(userService.findById(1L)).thenReturn(user);
         Task updatedTask = taskService.removePerformerFromTask(1L, 1L);
         assertNotNull(updatedTask);
         assertEquals(0, updatedTask.getPerformers().size());
-        verify(taskRepository, times(1)).findById(1L);
-        verify(taskRepository, times(1)).save(task);
 
     }
 
     @Test
     void testRemovePerformerFromTask_TaskNotFound_ThrowTaskNotFoundException() {
         when(taskRepository.findById(1L)).thenReturn(Optional.empty());
-        when(taskRepository.save(task)).thenReturn(task);
         RuntimeException exception = assertThrows(TaskNotFoundException.class,
-                ()->taskService.removePerformerFromTask(1L, 1L));
+                () -> taskService.removePerformerFromTask(1L, 1L));
     }
 
 

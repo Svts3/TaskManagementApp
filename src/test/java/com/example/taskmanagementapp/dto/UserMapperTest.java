@@ -3,7 +3,6 @@ package com.example.taskmanagementapp.dto;
 import com.example.taskmanagementapp.dto.mappers.UserMapper;
 import com.example.taskmanagementapp.model.Task;
 import com.example.taskmanagementapp.model.User;
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,6 +10,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 public class UserMapperTest {

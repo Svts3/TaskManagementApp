@@ -18,10 +18,12 @@ public class TaskDTO {
     private Long id;
     private String title;
     private String content;
+    private String status;
 
     private Date creationDate;
     private Date lastModifiedDate;
     private Date deadlineDate;
+
 
     private List<UserDTO> performers;
 

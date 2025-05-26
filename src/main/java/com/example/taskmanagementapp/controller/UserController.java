@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -47,6 +48,7 @@ public class UserController {
         return ResponseEntity.ok(userDTOS);
     }
 
+    @PreAuthorize("hasPermission(#id, 'com.example.taskmanagementapp.model.Workspace', 'READ')")
     @GetMapping("/task/{id}")
     public ResponseEntity<List<UserDTO>> findUsersByTaskId(@PathVariable("id") Long id) {
         List<User> users = userService.findUsersByTasksId(id);

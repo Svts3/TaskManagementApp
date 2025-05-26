@@ -1,10 +1,12 @@
 package com.example.taskmanagementapp.security.config;
 
+import com.example.taskmanagementapp.security.CustomAuthenticationEntryPoint;
 import com.example.taskmanagementapp.security.JwtTokenFilter;
 import com.example.taskmanagementapp.security.UserSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.acls.AclPermissionEvaluator;
@@ -19,6 +21,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.expression.DefaultHttpSecurityExpressionHandler;
 import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -27,15 +33,24 @@ public class SecurityConfig {
     @Autowired
     private UserSecurity userSecurity;
 
-    @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                            DefaultHttpSecurityExpressionHandler httpSecurityExpressionHandler
-    ) throws Exception {
-        http.httpBasic(httpBasicConfigurer -> {
-            httpBasicConfigurer.init(http);
-        });
-        http.csrf(AbstractHttpConfigurer::disable);
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
+    @Bean
+    UrlBasedCorsConfigurationSource setUpCors(){
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(List.of("*"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(httpRequest -> {
             httpRequest.requestMatchers("/auth/**").permitAll()
                     .requestMatchers("/users/").hasRole("ADMIN")
@@ -43,8 +58,9 @@ public class SecurityConfig {
                     .anyRequest().authenticated();
         });
         http.addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
-
+        http.exceptionHandling(httpSecurityExceptionHandlingConfigurer -> {
+            httpSecurityExceptionHandlingConfigurer.authenticationEntryPoint(customAuthenticationEntryPoint);
+        });
         return http.build();
     }
 

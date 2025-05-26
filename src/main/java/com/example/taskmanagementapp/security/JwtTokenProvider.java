@@ -1,5 +1,6 @@
 package com.example.taskmanagementapp.security;
 
+import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.service.UserService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class JwtTokenProvider {
@@ -24,16 +27,23 @@ public class JwtTokenProvider {
     public String generateToken(UserDetails userDetails){
         return Jwts
                 .builder()
-                .setSubject(userDetails.getUsername())
+                .setClaims(getTokenClaims(userDetails))
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis()+expiration))
                 .signWith(generateKey())
                 .compact();
     }
 
+    private Map<String, String> getTokenClaims(UserDetails userDetails){
+        Map<String, String> claims = new HashMap<>();
+        claims.put("sub", userDetails.getUsername());
+        claims.put("id", String.valueOf(((User)userDetails).getId()));
+        return claims;
+    }
+
     public Boolean validateToken(String token){
         try{
-            Jwts.parserBuilder().setSigningKey(generateKey()).build();
+            Jwts.parserBuilder().setSigningKey(generateKey()).build().parseClaimsJws(token);
             return true;
         }catch (ExpiredJwtException | MalformedJwtException | UnsupportedJwtException |
                 PrematureJwtException expiredJwtException){

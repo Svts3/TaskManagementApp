@@ -7,13 +7,11 @@ import com.example.taskmanagementapp.model.RefreshToken;
 import com.example.taskmanagementapp.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin("*")
 public class AuthController {
 
     private AuthService authService;
@@ -25,7 +23,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequestDTO registerRequestDTO) {
-        String result = authService.register(registerRequestDTO);
+        authService.register(registerRequestDTO);
         return ResponseEntity.ok("User was registered successfully!");
     }
 

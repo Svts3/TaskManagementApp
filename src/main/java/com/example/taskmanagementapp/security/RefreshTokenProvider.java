@@ -4,6 +4,7 @@ import com.example.taskmanagementapp.exception.RefreshTokenNotFoundException;
 import com.example.taskmanagementapp.model.RefreshToken;
 import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.repository.RefreshTokenRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +27,7 @@ public class RefreshTokenProvider {
     @Value("${refresh.token.expiration}")
     private Long expiration;
 
+    @Transactional
     public RefreshToken generateRefreshToken(User user) {
         RefreshToken refreshToken = RefreshToken
                 .builder()
@@ -33,6 +35,9 @@ public class RefreshTokenProvider {
                 .expirationDate(new Date(System.currentTimeMillis() + expiration))
                 .user(user)
                 .build();
+        if(this.existsByUserId(user.getId())){
+            this.deleteTokenByUserId(user.getId());
+        }
         return refreshTokenRepository.save(refreshToken);
     }
 
@@ -50,6 +55,14 @@ public class RefreshTokenProvider {
         return refreshTokenRepository.findByToken(token).orElseThrow(
                 () -> new RefreshTokenNotFoundException(String.format("%s refresh token was not found!", token)));
     }
+
+    public Boolean existsByUserId(Long id){
+        return refreshTokenRepository.existsByUserId(id);
+    }
+    public void deleteTokenByUserId(Long id){
+        refreshTokenRepository.deleteByUserId(id);
+    }
+
 
 
 }

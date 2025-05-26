@@ -18,7 +18,8 @@ public class UserSecurity implements AuthorizationManager<RequestAuthorizationCo
         Long userId = Long.valueOf(object.getVariables().get("id"));
         User user = (User) authentication.get().getPrincipal();
         if (!user.getId().equals(userId)) {
-            throw new UserIdMismatchException("Authenticated user's id and requested id don't match");
+            throw new UserIdMismatchException(String.format("Authenticated user's id %d and requested id %d don't match",
+                    user.getId(), userId));
         }
         return new AuthorizationDecision(true);
     }
