@@ -39,10 +39,12 @@ public class SecurityConfig {
     @Bean
     UrlBasedCorsConfigurationSource setUpCors(){
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(List.of("*"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+            configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+            configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+            configuration.setAllowedHeaders(List.of("Authorization", "authorization", "Content-Type", "X-Requested-With"));
+            configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
+            configuration.setAllowCredentials(true);
+            configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -51,6 +53,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
+        http.cors(cors -> cors.configurationSource(setUpCors()));
         http.authorizeHttpRequests(httpRequest -> {
             httpRequest.requestMatchers("/auth/**").permitAll()
                     .requestMatchers("/users/").hasRole("ADMIN")
