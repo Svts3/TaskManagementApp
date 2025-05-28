@@ -37,46 +37,42 @@ public class TaskController {
         List<TaskDTO> taskDTOS = TaskMapper.TASK_MAPPER.tasksToTaskDTOs(tasks);
         return ResponseEntity.ok(taskDTOS);
     }
-    @PreAuthorize("hasPermission(@taskServiceImpl.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'READ')")
+    @PreAuthorize("hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'READ')")
     @GetMapping("/{id}")
     public ResponseEntity<TaskDTO> findById(@PathVariable(name = "id") Long id) {
         Task task = taskService.findById(id);
         TaskDTO taskDTO = TaskMapper.TASK_MAPPER.taskToTaskDTO(task);
         return ResponseEntity.ok(taskDTO);
     }
-    @PreAuthorize("hasPermission(@workspaceServiceImpl.findByTasksId(#id).id," +
-            " 'com.example.taskmanagementapp.model.Workspace', 'WRITE')")
+    @PreAuthorize("hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'WRITE') or hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
     @PatchMapping("/{id}")
     public ResponseEntity<TaskDTO> update(@PathVariable(name = "id") Long id, @RequestBody Task task) {
         Task task1 = taskService.update(task, id);
         TaskDTO taskDTO = TaskMapper.TASK_MAPPER.taskToTaskDTO(task1);
         return ResponseEntity.ok(taskDTO);
     }
-    @PostAuthorize("hasPermission(#task.workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'CREATE')")
+    @PreAuthorize("hasPermission(#task.workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'CREATE') or hasPermission(#task.workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
     @PostMapping("/")
     public ResponseEntity<TaskDTO> save(@RequestBody Task task) {
         Task task1 = taskService.save(task);
         TaskDTO taskDTO = TaskMapper.TASK_MAPPER.taskToTaskDTO(task1);
         return ResponseEntity.ok(taskDTO);
     }
-    @PreAuthorize("hasPermission(@workspaceServiceImpl.findByTasksId(#id).id, " +
-            "'com.example.taskmanagementapp.model.Workspace', 'WRITE')")
+    @PreAuthorize("hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'WRITE') or hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
     @PatchMapping("/{id}/users")
     public ResponseEntity<TaskDTO> addPerformersToTask(@PathVariable("id") Long id, @RequestBody List<Long> userIds) {
         Task task = taskService.addPerformersToTask(id, userIds);
         TaskDTO taskDTO = TaskMapper.TASK_MAPPER.taskToTaskDTO(task);
         return ResponseEntity.ok(taskDTO);
     }
-    @PreAuthorize("hasPermission(@workspaceServiceImpl.findByTasksId(#id).id," +
-            "'com.example.taskmanagementapp.model.Workspace', 'WRITE')")
+    @PreAuthorize("hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'WRITE') or hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
     @PatchMapping("/{id}/users/{userId}")
     public ResponseEntity<TaskDTO> removePerformerFromTask(@PathVariable("id") Long id, @PathVariable("userId") Long performerId) {
         Task task = taskService.removePerformerFromTask(id, performerId);
         TaskDTO taskDTO = TaskMapper.TASK_MAPPER.taskToTaskDTO(task);
         return ResponseEntity.ok(taskDTO);
     }
-    @PreAuthorize("hasPermission(@workspaceServiceImpl.findByTasksId(#id).id," +
-            "'com.example.taskmanagementapp.model.Workspace', 'DELETE')")
+    @PreAuthorize("hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'DELETE') or hasPermission(@taskService.findById(#id).workspace.id, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
     @DeleteMapping("/{id}")
     public ResponseEntity<TaskDTO> deleteById(@PathVariable(name = "id") Long id) {
         Task task1 = taskService.deleteById(id);

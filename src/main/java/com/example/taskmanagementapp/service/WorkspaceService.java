@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface WorkspaceService extends GeneralService<Workspace, Long>{
     Workspace addUsersToWorkspace(Long workspaceId, List<Long>userIds);
+    Workspace addUsersToWorkspaceByEmails(Long workspaceId, List<String> emails);
 
     Workspace removeUserFromWorkspace(Long workspaceId, Long userId);
 

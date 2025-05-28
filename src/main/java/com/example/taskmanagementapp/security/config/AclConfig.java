@@ -54,7 +54,9 @@ public class AclConfig {
 
     @Bean
     public AclPermissionEvaluator permissionEvaluator(MutableAclService aclService){
-        return new AclPermissionEvaluator(aclService);
+        AclPermissionEvaluator evaluator = new AclPermissionEvaluator(aclService);
+        evaluator.setPermissionFactory(new DefaultPermissionFactory());
+        return evaluator;
     }
 
     @Bean

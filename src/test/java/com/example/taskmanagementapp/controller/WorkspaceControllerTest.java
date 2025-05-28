@@ -289,7 +289,7 @@ public class WorkspaceControllerTest {
         workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("ADMIN"));
 
         mockMvc.perform(post("/workspaces/{id}/users", workspace.getId()).with(user(user))
-                        .content(objectMapper.writeValueAsString(List.of(-5))).contentType(MediaType.APPLICATION_JSON))
+                        .content(objectMapper.writeValueAsString(List.of("nonexistent@email.com"))).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().isNotFound(),
                         content().contentType(MediaType.APPLICATION_JSON),

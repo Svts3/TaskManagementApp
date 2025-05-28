@@ -1,5 +1,6 @@
 package com.example.taskmanagementapp.controller;
 
+import com.example.taskmanagementapp.dto.PasswordChangeDTO;
 import com.example.taskmanagementapp.dto.UserDTO;
 import com.example.taskmanagementapp.dto.mappers.UserMapper;
 import com.example.taskmanagementapp.model.User;
@@ -79,5 +80,11 @@ public class UserController {
         return ResponseEntity.ok(userDTO);
     }
 
+    @PatchMapping("/{id}/password")
+    public ResponseEntity<UserDTO> changePassword(@PathVariable("id") Long id, @RequestBody PasswordChangeDTO passwordChangeDTO) {
+        User updatedUser = userService.changePassword(id, passwordChangeDTO.getCurrentPassword(), passwordChangeDTO.getNewPassword());
+        UserDTO userDTO = UserMapper.USER_MAPPER.userToUserDTO(updatedUser);
+        return ResponseEntity.ok(userDTO);
+    }
 
 }

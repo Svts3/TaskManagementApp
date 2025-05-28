@@ -17,7 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
+@Service("taskService")
+@jakarta.transaction.Transactional
 public class TaskServiceImpl implements TaskService {
 
     private TaskRepository taskRepository;
@@ -47,8 +48,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task findById(@NonNull Long aLong) {
-        return taskRepository.findById(aLong).orElseThrow(
-                () -> new TaskNotFoundException(String.format("Task with %d ID was not found!", aLong)));
+        // Try to find with performers eagerly loaded first
+        return taskRepository.findByIdWithPerformers(aLong)
+                .orElseGet(() -> taskRepository.findById(aLong)
+                        .orElseThrow(() -> new TaskNotFoundException(String.format("Task with %d ID was not found!", aLong))));
     }
 
     @Override
@@ -58,9 +61,14 @@ public class TaskServiceImpl implements TaskService {
         return taskRepository.save(task);
     }
 
+    @jakarta.transaction.Transactional
     @Override
     public Task deleteById(@NonNull Long aLong) {
         Task task = findById(aLong);
+        // Explicitly initialize collections to avoid LazyInitializationException
+        if (task.getPerformers() != null) {
+            task.getPerformers().size(); // Force initialization
+        }
         taskRepository.deleteById(aLong);
         return task;
     }

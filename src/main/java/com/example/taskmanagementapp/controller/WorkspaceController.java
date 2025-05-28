@@ -58,8 +58,8 @@ public class WorkspaceController {
 
     @PreAuthorize("hasPermission(#id, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
     @PostMapping("/{id}/users")
-    public ResponseEntity<WorkspaceDTO> addUsersToWorkspace(@PathVariable("id") Long id, @RequestBody List<Long> userIds) {
-        Workspace workspace = workspaceService.addUsersToWorkspace(id, userIds);
+    public ResponseEntity<WorkspaceDTO> addUsersToWorkspace(@PathVariable("id") Long id, @RequestBody List<String> emails) {
+        Workspace workspace = workspaceService.addUsersToWorkspaceByEmails(id, emails);
         WorkspaceDTO workspaceDTO = WorkspaceMapper.WORKSPACE_MAPPER.workspaceToWorkspaceDTO(workspace);
         return ResponseEntity.ok(workspaceDTO);
     }
@@ -94,7 +94,8 @@ public class WorkspaceController {
                                                                    @PathVariable(name = "userId") Long userId,
                                                                    @RequestBody List<String> permissions) {
         workspaceService.addPermissionsForUserInWorkspace(workspaceId, userId, permissions);
-        return ResponseEntity.ok("Permissions was successfully granted!");
+        return ResponseEntity.ok(String.format("Permissions %s were successfully granted to user with ID %d in workspace with ID %d", 
+                                              permissions, userId, workspaceId));
     }
     @PreAuthorize("hasPermission(#workspaceId, 'com.example.taskmanagementapp.model.Workspace', 'ADMINISTRATION')")
     @DeleteMapping("/{workspaceId}/users/{userId}/permissions")
@@ -102,7 +103,8 @@ public class WorkspaceController {
                                                                    @PathVariable(name = "userId") Long userId,
                                                                    @RequestBody List<String> permissions) {
         workspaceService.removePermissionsForUserInWorkspace(workspaceId, userId, permissions);
-        return ResponseEntity.ok("Permissions was successfully removed!");
+        return ResponseEntity.ok(String.format("Permissions %s were successfully removed from user with ID %d in workspace with ID %d", 
+                                              permissions, userId, workspaceId));
     }
 
 

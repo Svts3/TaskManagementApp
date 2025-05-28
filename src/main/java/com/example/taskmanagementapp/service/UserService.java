@@ -15,4 +15,6 @@ public interface UserService extends GeneralService<User, Long>{
     List<User>findUsersByTasksId(Long id);
 
     Boolean existsByEmailAndWorkspacesId(String email, Long workspaceId);
+    
+    User changePassword(Long userId, String currentPassword, String newPassword);
 }

@@ -12,6 +12,7 @@ import com.example.taskmanagementapp.service.UserService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -26,14 +27,17 @@ public class UserServiceImpl implements UserService {
 
     private TaskRepository taskRepository;
 
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
                            WorkspaceRepository workspaceRepository,
-                           TaskRepository taskRepository) {
+                           TaskRepository taskRepository,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.workspaceRepository = workspaceRepository;
         this.taskRepository = taskRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -97,5 +101,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean existsByEmailAndWorkspacesId(@NonNull String email, @NonNull Long workspaceId) {
         return userRepository.existsByEmailAndWorkspacesId(email, workspaceId);
+    }
+    
+    @Transactional
+    @Override
+    public User changePassword(@NonNull Long userId, @NonNull String currentPassword, @NonNull String newPassword) {
+        User user = findById(userId);
+        
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        return userRepository.save(user);
     }
 }
