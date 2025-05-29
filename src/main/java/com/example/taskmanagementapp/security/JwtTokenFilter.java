@@ -15,6 +15,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -37,9 +39,19 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 email = jwtTokenProvider.extractEmailFromToken(jwt);
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(email);
 
-                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                // Extract permissions from token
+                Map<Long, String[]> permissions = jwtTokenProvider.extractPermissionsFromToken(jwt);
+
+                // Create an authentication with user details and permissions
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()
                 );
+
+                // Add permissions as a detail to the authentication
+                Map<String, Object> details = new HashMap<>();
+                details.put("permissions", permissions);
+                authentication.setDetails(details);
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }

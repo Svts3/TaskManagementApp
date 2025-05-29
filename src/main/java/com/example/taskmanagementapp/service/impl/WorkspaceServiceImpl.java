@@ -227,10 +227,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         PrincipalSid userSid = new PrincipalSid(user.getEmail());
 
         // Get existing permissions for this user
-        List<Permission> userPermissions = acl.getEntries().stream()
+        Set<Permission> userPermissions = acl.getEntries().stream()
                 .filter(entry -> entry.getSid().equals(userSid))
                 .map(AccessControlEntry::getPermission)
-                .toList();
+                .collect(Collectors.toSet());
 
         // Process each permission to add
         for (String permString : permissions) {
@@ -242,6 +242,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             if (!hasPermission) {
                 // Add the new permission
                 acl.insertAce(acl.getEntries().size(), permission, userSid, true);
+                userPermissions.add(permission); // Add to our tracking set to avoid duplicates in this session
             }
         }
 

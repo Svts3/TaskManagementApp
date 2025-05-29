@@ -13,6 +13,7 @@ import com.example.taskmanagementapp.security.CustomUserDetailsService;
 import com.example.taskmanagementapp.security.JwtTokenProvider;
 import com.example.taskmanagementapp.security.RefreshTokenProvider;
 import com.example.taskmanagementapp.service.AuthService;
+import com.example.taskmanagementapp.service.UserPermissionService;
 import com.example.taskmanagementapp.service.UserService;
 import org.springframework.lang.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -76,6 +78,9 @@ public class AuthServiceImpl implements AuthService {
         return "User was registered successfully!";
     }
 
+    @Autowired
+    private UserPermissionService userPermissionService;
+
     @Override
     public AccessTokenResponseDTO login(@NonNull LoginRequestDTO request) {
         Authentication authentication = authenticationManager.authenticate(
@@ -87,9 +92,15 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.generateToken(user);
         RefreshToken refreshToken = refreshTokenProvider.generateRefreshToken(user);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Get user permissions for all workspaces
+        Map<Long, String[]> permissions = userPermissionService.getUserWorkspacePermissions(user);
+
         AccessTokenResponseDTO loginResponse = AccessTokenResponseDTO
-                .builder().accessToken(accessToken)
+                .builder()
+                .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
+                .permissions(permissions)
                 .build();
         return loginResponse;
     }
@@ -99,13 +110,19 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken refreshToken1 = refreshTokenProvider.findByToken(token.getToken());
         if (!refreshTokenProvider.validateRefreshToken(refreshToken1.getToken())) {
             throw new RefreshTokenExpiredException(String.format("%s refresh token is expired!", refreshToken1.getToken()));
-
         }
-        String accessToken = jwtTokenProvider.generateToken(refreshToken1.getUser());
+
+        User user = refreshToken1.getUser();
+        String accessToken = jwtTokenProvider.generateToken(user);
+
+        // Get user permissions for all workspaces
+        Map<Long, String[]> permissions = userPermissionService.getUserWorkspacePermissions(user);
+
         AccessTokenResponseDTO accessTokenResponseDTO = AccessTokenResponseDTO
                 .builder()
                 .refreshToken(refreshToken1.getToken())
                 .accessToken(accessToken)
+                .permissions(permissions)
                 .build();
         return accessTokenResponseDTO;
     }
