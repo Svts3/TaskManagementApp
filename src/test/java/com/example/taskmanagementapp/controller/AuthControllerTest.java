@@ -78,81 +78,69 @@ public class AuthControllerTest {
         roleRepository.save(new Role("ROLE_ADMIN"));
     }
 
-    @Test
-    void testRegister_WithValidData_ReturnOk() throws Exception {
-        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
+    private RegisterRequestDTO createValidRegisterRequest() {
+        return RegisterRequestDTO
                 .builder()
                 .firstName("fName")
                 .lastName("lName")
                 .email("test.test@gmail.com")
                 .password("test")
                 .build();
+    }
 
-        mockMvc.perform(post("/auth/register", registerRequestDTO)
+    private LoginRequestDTO createValidLoginRequest() {
+        return LoginRequestDTO
+                .builder()
+                .email("test.test@gmail.com")
+                .password("test")
+                .build();
+    }
+
+    private void registerValidUser() {
+        authController.register(createValidRegisterRequest());
+    }
+
+    @Test
+    void testRegister_WithValidData_ReturnOk() throws Exception {
+        RegisterRequestDTO registerRequestDTO = createValidRegisterRequest();
+
+        mockMvc.perform(post("/auth/register")
                         .content(objectMapper.writeValueAsString(registerRequestDTO)).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().isOk(),
                         jsonPath("$").exists()
                 );
-
     }
 
     @Test
     void testRegister_WithNullObject_ReturnBadRequest() throws Exception {
-        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
-                .builder()
-                .firstName("fName")
-                .lastName("lName")
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
-
-        mockMvc.perform(post("/auth/register", registerRequestDTO)
-                        .content(objectMapper.writeValueAsString(registerRequestDTO)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/auth/register")
+                        .content("{}").contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
-                        status().isOk(),
-                        jsonPath("$").exists()
+                        status().isBadRequest(),
+                        jsonPath("$.statusCode").value(HttpStatus.BAD_REQUEST.value()),
+                        jsonPath("$.message").exists()
                 );
-
     }
 
     @Test
     void testRegister_WithDuplicateEmail_ReturnBadRequest() throws Exception {
-        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
-                .builder()
-                .firstName("fName")
-                .lastName("lName")
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
-        authController.register(registerRequestDTO);
+        RegisterRequestDTO registerRequestDTO = createValidRegisterRequest();
+        registerValidUser();
 
-        mockMvc.perform(post("/auth/register", registerRequestDTO)
+        mockMvc.perform(post("/auth/register")
                         .content(objectMapper.writeValueAsString(registerRequestDTO)).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().isBadRequest(),
                         jsonPath("$.statusCode").value(HttpStatus.BAD_REQUEST.value()),
                         jsonPath("$.message").exists()
                 );
-
     }
 
     @Test
     void testLogin_WithValidData_ReturnOk() throws Exception {
-        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
-                .builder()
-                .firstName("fName")
-                .lastName("lName")
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
-        authController.register(registerRequestDTO);
-
-        LoginRequestDTO loginRequestDTO = LoginRequestDTO
-                .builder()
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
+        registerValidUser();
+        LoginRequestDTO loginRequestDTO = createValidLoginRequest();
 
         mockMvc.perform(post("/auth/login")
                         .content(objectMapper.writeValueAsString(loginRequestDTO)).contentType(MediaType.APPLICATION_JSON))
@@ -166,14 +154,7 @@ public class AuthControllerTest {
 
     @Test
     void testLogin_WithInvalidPassword_ReturnUnAuthorized() throws Exception {
-        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
-                .builder()
-                .firstName("fName")
-                .lastName("lName")
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
-        authController.register(registerRequestDTO);
+        registerValidUser();
 
         LoginRequestDTO loginRequestDTO = LoginRequestDTO
                 .builder()
@@ -192,18 +173,11 @@ public class AuthControllerTest {
 
     @Test
     void testLogin_WithInvalidEmail_ReturnNotFound() throws Exception {
-        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
-                .builder()
-                .firstName("fName")
-                .lastName("lName")
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
-        authController.register(registerRequestDTO);
+        registerValidUser();
 
         LoginRequestDTO loginRequestDTO = LoginRequestDTO
                 .builder()
-                .email("email")
+                .email("non-existent@email.com")
                 .password("test")
                 .build();
 
@@ -216,31 +190,21 @@ public class AuthControllerTest {
                 );
     }
 
+    private AccessTokenResponseDTO loginUser() {
+        registerValidUser();
+        return authController.login(createValidLoginRequest()).getBody();
+    }
+
     @Test
     void testRefreshToken_WithValidToken_ReturnOk() throws Exception {
-
-        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
-                .builder()
-                .firstName("fName")
-                .lastName("lName")
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
-        authController.register(registerRequestDTO);
-
-        LoginRequestDTO loginRequestDTO = LoginRequestDTO
-                .builder()
-                .email("test.test@gmail.com")
-                .password("test")
-                .build();
-
-        AccessTokenResponseDTO accessTokenResponseDTO = authController.login(loginRequestDTO).getBody();
+        AccessTokenResponseDTO accessTokenResponseDTO = loginUser();
 
         RefreshToken refreshToken = RefreshToken
                 .builder()
                 .token(refreshTokenProvider.findByToken(accessTokenResponseDTO.getRefreshToken()).getToken())
                 .build();
         String content = objectMapper.writeValueAsString(refreshToken);
+
         mockMvc.perform(post("/auth/refresh-token")
                         .content(content).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
@@ -269,5 +233,42 @@ public class AuthControllerTest {
                 );
     }
 
+    @Test
+    void testRegister_WithInvalidEmail_ReturnBadRequest() throws Exception {
+        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
+                .builder()
+                .firstName("fName")
+                .lastName("lName")
+                .email("invalid-email")
+                .password("test")
+                .build();
+
+        mockMvc.perform(post("/auth/register")
+                        .content(objectMapper.writeValueAsString(registerRequestDTO)).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().isBadRequest(),
+                        jsonPath("$.statusCode").value(HttpStatus.BAD_REQUEST.value()),
+                        jsonPath("$.message").exists()
+                );
+    }
+
+    @Test
+    void testRegister_WithEmptyFields_ReturnBadRequest() throws Exception {
+        RegisterRequestDTO registerRequestDTO = RegisterRequestDTO
+                .builder()
+                .firstName("")
+                .lastName("")
+                .email("test@email.com")
+                .password("test")
+                .build();
+
+        mockMvc.perform(post("/auth/register")
+                        .content(objectMapper.writeValueAsString(registerRequestDTO)).contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().isBadRequest(),
+                        jsonPath("$.statusCode").value(HttpStatus.BAD_REQUEST.value()),
+                        jsonPath("$.message").exists()
+                );
+    }
 
 }

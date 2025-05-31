@@ -25,6 +25,7 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
+
     private String title;
 
     private String content;

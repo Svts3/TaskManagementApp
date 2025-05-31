@@ -37,6 +37,11 @@ public class UserPermissionServiceImpl implements UserPermissionService {
         // Get all workspaces for the user
         List<Workspace> userWorkspaces = user.getWorkspaces();
 
+        // Return empty map if workspaces is null
+        if (userWorkspaces == null) {
+            return workspacePermissions;
+        }
+
         for (Workspace workspace : userWorkspaces) {
             try {
                 ObjectIdentityImpl objectIdentity = new ObjectIdentityImpl(workspace);

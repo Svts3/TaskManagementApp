@@ -43,12 +43,15 @@ public class UserServiceTest {
 
     @BeforeEach
     void setUp() {
+        user = User.builder().id(1L).firstName("firstName").lastName("lastName").email("email").password("pass").build();
+
         List<User> members = new ArrayList<>();
         members.add(user);
         workspace = Workspace.builder().id(1L).name("test").creator(user).members(members).build();
+
         List<Workspace> userWorkspaces = new ArrayList<>();
         userWorkspaces.add(workspace);
-        user = User.builder().id(1L).firstName("firstName").lastName("lastName").email("email").password("pass").workspaces(userWorkspaces).build();
+        user.setWorkspaces(userWorkspaces);
     }
 
 

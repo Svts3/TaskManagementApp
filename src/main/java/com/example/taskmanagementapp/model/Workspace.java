@@ -1,6 +1,7 @@
 package com.example.taskmanagementapp.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.annotation.CreatedBy;
@@ -8,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,6 +29,7 @@ public class Workspace {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     @Column(name = "name", nullable = false)
+    @jakarta.validation.constraints.NotBlank(message = "Workspace name must not be blank")
     private String name;
 
     @CreatedDate
@@ -40,10 +43,12 @@ public class Workspace {
     @ManyToMany
     @JoinTable(name = "users_workspaces", joinColumns = @JoinColumn(name = "workspace_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
-    private List<User> members;
+    @Builder.Default
+    private List<User> members = new ArrayList<>();
 
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL)
-    private List<Task> tasks;
+    @Builder.Default
+    private List<Task> tasks = new java.util.ArrayList<>();
 
     @ManyToOne
     @CreatedBy

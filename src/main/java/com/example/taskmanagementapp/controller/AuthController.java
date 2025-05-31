@@ -5,6 +5,7 @@ import com.example.taskmanagementapp.dto.LoginRequestDTO;
 import com.example.taskmanagementapp.dto.RegisterRequestDTO;
 import com.example.taskmanagementapp.model.RefreshToken;
 import com.example.taskmanagementapp.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequestDTO registerRequestDTO) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
         authService.register(registerRequestDTO);
         return ResponseEntity.ok("User was registered successfully!");
     }

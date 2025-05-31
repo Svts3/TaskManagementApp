@@ -59,8 +59,20 @@ public class WorkspaceServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Create user first
+        user = User
+                .builder()
+                .id(1L)
+                .email("test.test@gmail.com")
+                .password("pass")
+                .workspaces(new ArrayList<>())
+                .roles(List.of(new Role(1L, "ROLE_ADMIN"))).build();
+
+        // Create list of members including the test user
         List<User> members = new ArrayList<>();
+        members.add(user);  // Add user with ID 1
         members.add(User.builder().id(2L).build());
+
         workspace = Workspace
                 .builder()
                 .id(1L)
@@ -70,13 +82,6 @@ public class WorkspaceServiceTest {
                 .creationDate(new Date())
                 .members(members)
                 .build();
-        user = User
-                .builder()
-                .id(1L)
-                .email("test.test@gmail.com")
-                .password("pass")
-                .workspaces(new ArrayList<>())
-                .roles(List.of(new Role(1L, "ROLE_ADMIN"))).build();
 
         authentication = new TestingAuthenticationToken(user, null, "ROLE_ADMIN");
 
@@ -131,21 +136,48 @@ public class WorkspaceServiceTest {
 
     @Test
     void testUpdate_WithValidData_UpdateSuccessfully() {
+        // Create an update object with only name and date - explicitly set empty tasks and members collections
         Workspace workspace2 = Workspace
                 .builder()
                 .name("workspaceUpd")
                 .lastModifiedDate(new Date())
+                // Not setting tasks or members to simulate a partial update
                 .build();
-        when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
-        when(workspaceRepository.save(workspace)).thenReturn(workspace);
+
+        // Create a mutable copy of workspace with mutable collections
+        Workspace mutableWorkspace = Workspace.builder()
+                .id(workspace.getId())
+                .name(workspace.getName())
+                .creationDate(workspace.getCreationDate())
+                .lastModifiedDate(workspace.getLastModifiedDate())
+                .creator(workspace.getCreator())
+                .members(new ArrayList<>(workspace.getMembers()))
+                .tasks(new ArrayList<>(workspace.getTasks()))
+                .build();
+
+        // Verify the initial state has the expected tasks
+        assertEquals(1, mutableWorkspace.getTasks().size());
+        assertEquals(2, mutableWorkspace.getMembers().size());
+
+        // Set up mock behavior - the workspaceRepository should return our mutable workspace
+        // and when save is called, it should return the same mutable workspace (simulating persistence)
+        when(workspaceRepository.findById(1L)).thenReturn(Optional.of(mutableWorkspace));
+        when(workspaceRepository.save(any(Workspace.class))).thenAnswer(invocation -> {
+            // This will return the actual modified workspace that was passed to save
+            return invocation.getArgument(0);
+        });
+
         Workspace updatedWorkspace = workspaceService.update(workspace2, 1L);
 
         assertNotNull(updatedWorkspace);
         assertNotNull(updatedWorkspace.getLastModifiedDate());
         assertEquals(1L, updatedWorkspace.getId());
         assertEquals("workspaceUpd", updatedWorkspace.getName());
+
+        // Tasks should be preserved since we didn't specify any in the update
         assertEquals(1, updatedWorkspace.getTasks().size());
-        assertEquals(1, updatedWorkspace.getMembers().size());
+        // Members should be preserved since we didn't specify any in the update
+        assertEquals(2, updatedWorkspace.getMembers().size());
     }
 
     @Test
@@ -173,17 +205,17 @@ public class WorkspaceServiceTest {
 
     @Test
     void testAddUsersToWorkspace_WithValidData_AddUsersToWorkspaceSuccessfully() {
+        // Create a different user that isn't already in members list
+        User newUser = User.builder().id(3L).email("new.user@gmail.com").workspaces(new ArrayList<>()).build();
+
         when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
-        when(userService.findById(1L)).thenReturn(user);
+        when(userService.findById(3L)).thenReturn(newUser);
         when(jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace))).thenReturn(acl);
         when(workspaceRepository.save(workspace)).thenReturn(workspace);
-        acl.getEntries().add(new AccessControlEntryImpl(1L, acl,
-                new PrincipalSid(user.getEmail()), BasePermission.ADMINISTRATION,
-                true, true, true));
 
-        Workspace updatedWorkspace = workspaceService.addUsersToWorkspace(1L, List.of(1L));
+        Workspace updatedWorkspace = workspaceService.addUsersToWorkspace(1L, List.of(3L));
         assertNotNull(updatedWorkspace);
-        assertEquals(2, updatedWorkspace.getMembers().size());
+        assertEquals(3, updatedWorkspace.getMembers().size()); // Now expecting 3 members (2 existing + 1 new)
     }
 
     @Test
@@ -218,9 +250,21 @@ public class WorkspaceServiceTest {
 
     @Test
     void testRemoveUsersFromWorkspace_WithUserNotInWorkspace_ThrowUserNotInWorkspaceException() {
-        when(workspaceRepository.findById(1L)).thenReturn(Optional.of(workspace));
+        // Create a workspace without any members for this test
+        Workspace emptyWorkspace = Workspace
+                .builder()
+                .id(3L)
+                .name("empty workspace")
+                .members(new ArrayList<>())
+                .build();
+
+        User nonMemberUser = User.builder().id(5L).email("nonmember@test.com").build();
+
+        when(workspaceRepository.findById(3L)).thenReturn(Optional.of(emptyWorkspace));
+        when(userService.findById(5L)).thenReturn(nonMemberUser);
+
         assertThrows(UserNotInWorkspaceException.class,
-                ()->workspaceService.removeUserFromWorkspace(1L, 2L));
+                ()->workspaceService.removeUserFromWorkspace(3L, 5L));
     }
 
 
@@ -243,9 +287,9 @@ public class WorkspaceServiceTest {
 
     @Test
     void testAddPermissionToUserInWorkspace_WithValidData_AddPermissionSuccessfully() {
+        // The workspace members list now includes user with ID 1 from setUp
         when(userService.findById(user.getId())).thenReturn(user);
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
-
         when(jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace))).thenReturn(acl);
 
         workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("WRITE", "DELETE"));
@@ -262,9 +306,9 @@ public class WorkspaceServiceTest {
 
     @Test
     void testAddPermissionToUserInWorkspace_WithLowerCase_AddPermissionSuccessfully() {
+        // The workspace members list now includes user with ID 1 from setUp
         when(userService.findById(user.getId())).thenReturn(user);
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
-
         when(jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace))).thenReturn(acl);
 
         workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("write", "delete"));
@@ -289,11 +333,15 @@ public class WorkspaceServiceTest {
 
     @Test
     void testRemovePermissionsForUserInWorkspace_WithValidData_RemovePermissionsForUserSuccessfully() {
+        // The workspace members list now includes user with ID 1 from setUp
         when(userService.findById(user.getId())).thenReturn(user);
         when(workspaceRepository.findById(workspace.getId())).thenReturn(Optional.of(workspace));
         when(jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace))).thenReturn(acl);
+
+        // Add permissions that we'll later remove
         acl.insertAce(acl.getEntries().size(), BasePermission.DELETE, new PrincipalSid(user.getEmail()), true);
         acl.insertAce(acl.getEntries().size(), BasePermission.ADMINISTRATION, new PrincipalSid(user.getEmail()), true);
+
         workspaceService.removePermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("ADMIN"));
 
         assertEquals(1, acl.getEntries().size());
@@ -301,7 +349,6 @@ public class WorkspaceServiceTest {
         verify(jdbcMutableAclService, times(1)).readAclById(new ObjectIdentityImpl(workspace));
         verify(userService, times(1)).findById(user.getId());
         verify(workspaceRepository, times(1)).findById(workspace.getId());
-
     }
 
     @Test

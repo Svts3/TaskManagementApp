@@ -5,6 +5,7 @@ import com.example.taskmanagementapp.dto.mappers.WorkspaceMapper;
 import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.model.Workspace;
 import com.example.taskmanagementapp.service.WorkspaceService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostFilter;
@@ -50,7 +51,7 @@ public class WorkspaceController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<WorkspaceDTO> save(@RequestBody Workspace workspace) {
+    public ResponseEntity<WorkspaceDTO> save(@Valid @RequestBody Workspace workspace) {
         Workspace workspace1 = workspaceService.save(workspace);
         WorkspaceDTO workspaceDTO = WorkspaceMapper.WORKSPACE_MAPPER.workspaceToWorkspaceDTO(workspace1);
         return ResponseEntity.ok(workspaceDTO);

@@ -246,12 +246,12 @@ public class WorkspaceControllerTest {
         Workspace workspace = Workspace.builder().name("test").members(members).build();
         workspaceService.save(workspace);
 
-        User user2 = User.builder().email("test2").workspaces(new ArrayList<>()).build();
+        User user2 = User.builder().email("test2@example.com").workspaces(new ArrayList<>()).build();
         userService.save(user2);
         workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("ADMIN"));
 
         mockMvc.perform(post("/workspaces/{id}/users", workspace.getId()).with(user(user))
-                        .content(objectMapper.writeValueAsString(List.of(user2.getId()))).contentType(MediaType.APPLICATION_JSON))
+                        .content(objectMapper.writeValueAsString(List.of(user2.getEmail()))).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().isOk(),
                         content().contentType(MediaType.APPLICATION_JSON)
@@ -264,12 +264,12 @@ public class WorkspaceControllerTest {
         Workspace workspace = Workspace.builder().name("test").members(members).build();
         workspaceService.save(workspace);
 
-        User user2 = User.builder().email("test2").build();
+        User user2 = User.builder().email("test2@example.com").build();
         userService.save(user2);
         workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("ADMIN"));
 
         mockMvc.perform(post("/workspaces/{id}/users", -5).with(user(user))
-                        .content(objectMapper.writeValueAsString(List.of(user2.getId()))).contentType(MediaType.APPLICATION_JSON))
+                        .content(objectMapper.writeValueAsString(List.of(user2.getEmail()))).contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
                         status().isUnauthorized(),
                         content().contentType(MediaType.APPLICATION_JSON),
@@ -284,7 +284,7 @@ public class WorkspaceControllerTest {
         Workspace workspace = Workspace.builder().name("test").members(members).build();
         workspaceService.save(workspace);
 
-        User user2 = User.builder().email("test2").build();
+        User user2 = User.builder().email("test2@example.com").build();
         userService.save(user2);
         workspaceService.addPermissionsForUserInWorkspace(workspace.getId(), user.getId(), List.of("ADMIN"));
 

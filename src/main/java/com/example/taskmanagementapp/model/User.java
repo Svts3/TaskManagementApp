@@ -10,6 +10,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -52,10 +53,10 @@ public class User implements UserDetails {
     private List<Role> roles;
 
     @ManyToMany(mappedBy = "performers")
-    private List<Task>tasks;
+    private List<Task>tasks = new ArrayList<>();
 
     @ManyToMany(mappedBy = "members", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<Workspace>workspaces;
+    private List<Workspace>workspaces = new java.util.ArrayList<>();
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles

@@ -3,6 +3,7 @@ package com.example.taskmanagementapp.service.impl;
 import com.example.taskmanagementapp.dto.mappers.WorkspaceMapper;
 import com.example.taskmanagementapp.exception.UserNotInWorkspaceException;
 import com.example.taskmanagementapp.exception.WorkspaceNotFoundException;
+import com.example.taskmanagementapp.model.Task;
 import com.example.taskmanagementapp.model.User;
 import com.example.taskmanagementapp.model.Workspace;
 import com.example.taskmanagementapp.repository.WorkspaceRepository;
@@ -23,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,7 +51,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     public Workspace save(@NonNull Workspace entity) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         User user = (User)authentication.getPrincipal();
-        entity.setMembers(List.of(user));
+        entity.setMembers(new ArrayList<>(List.of(user)));
         Workspace savedWorkspace = workspaceRepository.save(entity);
         MutableAcl acl = jdbcMutableAclService.createAcl(new ObjectIdentityImpl(savedWorkspace));
 
@@ -78,7 +80,25 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     @Override
     public Workspace update(@NonNull Workspace entity, @NonNull Long aLong) {
         Workspace workspace = findById(aLong);
+
+        // Save existing collections before updating anything
+        List<User> existingMembers = workspace.getMembers() != null ? new ArrayList<>(workspace.getMembers()) : new ArrayList<>();
+        List<Task> existingTasks = workspace.getTasks() != null ? new ArrayList<>(workspace.getTasks()) : new ArrayList<>();
+
         WorkspaceMapper.WORKSPACE_MAPPER.updateWorkspace(entity, workspace);
+
+        if (entity.getMembers() != null && !entity.getMembers().isEmpty()) {
+            workspace.setMembers(new ArrayList<>(entity.getMembers()));
+        } else {
+            workspace.setMembers(existingMembers);
+        }
+
+        if (entity.getTasks() != null && !entity.getTasks().isEmpty()) {
+            workspace.setTasks(new ArrayList<>(entity.getTasks()));
+        } else {
+            workspace.setTasks(existingTasks);
+        }
+
         return workspaceRepository.save(workspace);
     }
 
@@ -95,36 +115,31 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         Workspace workspace = findById(workspaceId);
         Set<User> users = userIds.stream().map(id -> userService.findById(id)).collect(Collectors.toSet());
 
-        // Filter out users who are already members
         Set<User> newUsers = users.stream()
                 .filter(user -> !workspace.getMembers().contains(user))
                 .collect(Collectors.toSet());
 
         if (newUsers.isEmpty()) {
-            return workspace; // No new users to add
+            return workspace;
         }
 
-        // Add all new users to the workspace
-        workspace.getMembers().addAll(newUsers);
+        List<User> updatedMembers = new ArrayList<>(workspace.getMembers());
+        updatedMembers.addAll(newUsers);
+        workspace.setMembers(updatedMembers);
 
-        // Read and update ACL
         MutableAcl acl = (MutableAcl) jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace));
 
-        // Add READ permission for each new user
         newUsers.forEach(user -> {
             PrincipalSid sid = new PrincipalSid(user.getEmail());
 
-            // Check if user already has READ permission
             boolean hasReadPermission = acl.getEntries().stream()
                     .anyMatch(ace -> ace.getSid().equals(sid) && 
                                     ace.getPermission().equals(BasePermission.READ));
 
-            // Add READ permission if not already present
             if (!hasReadPermission) {
                 acl.insertAce(acl.getEntries().size(), BasePermission.READ, sid, true);
             }
 
-            // Update bidirectional relationship
             user.getWorkspaces().add(workspace);
             userService.save(user);
         });
@@ -141,7 +156,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         if (!workspace.getMembers().contains(user)) {
             throw new UserNotInWorkspaceException(String.format("User %d is not in the workspace", userId));
         }
-        workspace.getMembers().removeIf(user1 -> user1.getId().equals(userId));
+
+        // Create a new list without the user to be removed
+        List<User> updatedMembers = new ArrayList<>(workspace.getMembers());
+        updatedMembers.removeIf(user1 -> user1.getId().equals(userId));
+        workspace.setMembers(updatedMembers);
         MutableAcl acl = (MutableAcl) jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace));
         acl.getEntries().removeIf(entry -> entry.getSid().equals(new PrincipalSid(user.getEmail())));
         jdbcMutableAclService.updateAcl(acl);
@@ -173,8 +192,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             return workspace; // No new users to add
         }
 
-        // Add all new users to the workspace
-        workspace.getMembers().addAll(newUsers);
+        // Create a new collection with all existing members plus new ones
+        List<User> updatedMembers = new ArrayList<>(workspace.getMembers());
+        updatedMembers.addAll(newUsers);
+        workspace.setMembers(updatedMembers);
 
         // Read and update ACL
         MutableAcl acl = (MutableAcl) jdbcMutableAclService.readAclById(new ObjectIdentityImpl(workspace));

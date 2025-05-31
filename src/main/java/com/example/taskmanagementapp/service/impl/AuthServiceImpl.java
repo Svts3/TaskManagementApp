@@ -65,6 +65,12 @@ public class AuthServiceImpl implements AuthService {
         if (userService.existsByEmail(registerRequestDTO.getEmail())) {
             throw new UserExistException(String.format("User %s email already exists", registerRequestDTO.getEmail()));
         }
+
+        // Add null check for password
+        if (registerRequestDTO.getPassword() == null) {
+            throw new IllegalArgumentException("Password cannot be null");
+        }
+
         User user = User
                 .builder()
                 .firstName(registerRequestDTO.getFirstName())
