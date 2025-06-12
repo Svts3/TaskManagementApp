@@ -32,6 +32,8 @@ public class Task {
 
     private String status;
 
+    private String priority;
+
     @CreatedDate
     @Column(name = "creation_date")
     private Date creationDate;

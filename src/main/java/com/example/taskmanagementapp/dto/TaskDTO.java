@@ -19,6 +19,7 @@ public class TaskDTO {
     private String title;
     private String content;
     private String status;
+    private String priority;
 
     private Date creationDate;
     private Date lastModifiedDate;

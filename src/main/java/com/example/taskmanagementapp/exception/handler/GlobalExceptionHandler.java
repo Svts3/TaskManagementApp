@@ -136,7 +136,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse
                 .builder()
                 .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .message(accessDeniedException.getMessage())
+                .message("Access denied: You don't have permission to perform this operation.")
                 .build();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
@@ -149,6 +149,16 @@ public class GlobalExceptionHandler {
                 .message(userNotInWorkspaceException.getMessage())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleException(PermissionDeniedException permissionDeniedException) {
+        ErrorResponse errorResponse = ErrorResponse
+                .builder()
+                .statusCode(HttpStatus.UNAUTHORIZED.value())
+                .message(permissionDeniedException.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
